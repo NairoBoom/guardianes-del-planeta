@@ -1,0 +1,14 @@
+Carpeta de imágenes y sonidos (sección 17 del documento).
+
+- Cristian_Lopez.jpeg y Juan_Noriega.jpeg: fotos originales de los estudiantes.
+- personajes/cristian_2.jpeg: foto que se usa ahora para Cristian (cara y retrato).
+- personajes/: recortes livianos que usa el juego.
+    *-cara.png      cara en círculo que va sobre el cuerpo del personaje.
+    *-retrato.jpg   foto de la tarjeta para elegir personaje.
+    eco-retrato.jpg es una captura de Eco tomada del mismo juego.
+- El parque, las canecas, los residuos y el cuerpo de los personajes se dibujan con código
+  en game.js (secciones 8, 9 y 10).
+- Los sonidos se generan con el navegador (Web Audio) en la función sonar() de game.js.
+
+Para agregar otro personaje con foto: guardar su cara (cuadrada, 256 x 256) y su retrato (3:4)
+en personajes/ y añadirlo a la lista PERSONAJES de game.js con los colores de su ropa.

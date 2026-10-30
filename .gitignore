@@ -1,0 +1,5 @@
+# Videos y fotos originales: el juego solo usa los recortes de assets/personajes/
+*.mp4
+assets/Cristian_Lopez.jpeg
+assets/Juan_Noriega.jpeg
+assets/personajes/cristian_2.jpeg

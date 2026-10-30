@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#092b2b">
+  <meta name="description" content="Guardianes del Planeta: videojuego educativo 2D sobre reciclaje. Proyecto STEAM de grado 11.">
+  <title>Guardianes del Planeta · Juego de reciclaje</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+
+    <!-- ===== ENCABEZADO ===== -->
+    <header class="encabezado">
+      <a class="marca" href="#inicio" aria-label="Guardianes del Planeta - inicio">
+        <span class="marca-simbolo" aria-hidden="true">✦</span>
+        <span class="marca-texto"><strong>GUARDIANES</strong><span>DEL PLANETA</span><span>POR CRISTIAN LÓPEZ</span><span>Y JUAN NORIEGA</span></span>
+      </a>
+      <div class="etiqueta-proyecto"><span class="punto"></span> PROYECTO STEAM · GRADO 11</div>
+    </header>
+
+    <main id="inicio">
+      <div class="intro">
+        <div>
+          <div class="antetitulo"><span>✳</span> VIDEOJUEGO EDUCATIVO 2D · AVENTURA Y CLASIFICACIÓN</div>
+          <h1>El parque está <span>lleno de basura.</span></h1>
+          <p>Elige a tu guardián, recoge los residuos y deposítalos en la caneca correcta: papel, plástico u orgánicos. ¡Limpia el parque y aprende a reciclar mientras juegas!</p>
+        </div>
+        <div class="insignia" aria-hidden="true"><span>🌎</span><small>¡SÉ EL<br>CAMBIO!</small></div>
+      </div>
+
+      <!-- ===== JUEGO ===== -->
+      <section class="juego" aria-label="Videojuego Guardianes del Planeta">
+
+        <!-- Marcador: puntos, tiempo y nivel -->
+        <div class="marcador">
+          <div class="dato"><span class="dato-icono icono-puntos">★</span><span class="dato-texto"><small>PUNTOS</small><strong id="puntos">0 <em>/ 100</em></strong></span></div>
+          <div class="dato"><span class="dato-icono icono-tiempo">◷</span><span class="dato-texto"><small>TIEMPO</small><strong id="tiempo">01:00</strong></span></div>
+          <div class="dato"><span class="dato-icono icono-nivel">⚑</span><span class="dato-texto"><small>NIVEL</small><strong id="nivel">1 <em>/ 3 · Fácil</em></strong></span></div>
+          <div class="botones-juego">
+            <button id="botonSonido" class="boton-icono" type="button" title="Activar o desactivar sonido" aria-label="Desactivar sonido">♫</button>
+            <button id="botonPausa" class="boton-icono" type="button" title="Pausar (P)" aria-label="Pausar" disabled>Ⅱ</button>
+          </div>
+        </div>
+
+        <!-- Escenario: p5.js inserta aquí el lienzo (canvas) del juego -->
+        <div class="escenario" id="contenedorJuego">
+          <noscript><p class="sin-js">Activa JavaScript para jugar.</p></noscript>
+          <div class="aviso" id="aviso" role="status" aria-live="polite"></div>
+
+          <div class="capa" id="capa">
+
+            <!-- Pantalla 1: Inicio -->
+            <section class="tarjeta" id="pantallaInicio">
+              <div class="pictograma" aria-hidden="true">🌱</div>
+              <div class="pildora">MISIÓN ECOLÓGICA</div>
+              <h2>Guardianes del Planeta</h2>
+              <p>El parque está lleno de basura. Elige a tu guardián, recoge los residuos, llévalos a la zona de reciclaje y deposita cada uno en la caneca correcta.</p>
+              <div class="resaltados"><span>⏳ 60 segundos</span><span>🎯 100 puntos</span><span>🏅 3 niveles</span></div>
+              <p class="record oculta" id="textoRecord"></p>
+              <!-- Si el archivo se abre en una vista previa (WhatsApp, Correo, Archivos del iPhone),
+                   JavaScript no se ejecuta: se oculta el botón y se explica cómo abrirlo. -->
+              <noscript>
+                <style>#botonJugar, #botonComoJugar { display: none; }</style>
+                <p class="sin-javascript">⚠️ Esta vista previa no puede ejecutar el juego.<br>Ábrelo en un navegador: <b>Chrome, Safari o Edge</b>. En iPhone, usa el enlace del juego.</p>
+              </noscript>
+              <button class="boton-principal" id="botonJugar" type="button">Jugar ➜</button>
+              <button class="boton-texto" id="botonComoJugar" type="button">¿Cómo se juega?</button>
+            </section>
+
+            <!-- Extra: elegir personaje -->
+            <section class="tarjeta tarjeta-personajes oculta" id="pantallaPersonaje">
+              <div class="pildora">ELIGE TU GUARDIÁN</div>
+              <h2>¿Quién limpiará el parque?</h2>
+              <div class="personajes" id="listaPersonajes"><!-- game.js crea las tarjetas --></div>
+              <button class="boton-texto" id="botonVolverDeSeleccion" type="button">Volver</button>
+            </section>
+
+            <!-- Pantalla 2: Instrucciones -->
+            <section class="tarjeta tarjeta-instrucciones oculta" id="pantallaInstrucciones">
+              <div class="pildora">MANUAL DEL GUARDIÁN</div>
+              <h2>¿Cómo se juega?</h2>
+              <div class="pasos">
+                <div><span class="paso-numero">01</span><div><strong>Muévete por el parque</strong><p>Usa las <b>flechas</b> o <b>W A S D</b>. También puedes hacer clic o tocar el suelo.</p></div></div>
+                <div><span class="paso-numero">02</span><div><strong>Recoge un residuo</strong><p>Acércate y presiona <b>E</b> o <b>espacio</b>, o toca el residuo.</p></div></div>
+                <div><span class="paso-numero">03</span><div><strong>Clasifícalo</strong><p>Llévalo a la zona de reciclaje y deposítalo en la caneca de <b>papel</b>, <b>plástico</b> u <b>orgánicos</b>.</p></div></div>
+              </div>
+              <ol class="reglas">
+                <li>Empiezas con <b>0 puntos</b>.</li>
+                <li>Cada residuo bien clasificado: <b>+10 puntos</b>.</li>
+                <li>Cada residuo mal clasificado: <b>−5 puntos</b>.</li>
+                <li>Tienes <b>60 segundos</b> para los 3 niveles: fácil, intermedio y difícil.</li>
+                <li>Ganas si alcanzas <b>100 puntos</b> antes de que termine el tiempo. ¡Limpia todo el parque para ganar la medalla de oro!</li>
+              </ol>
+              <div class="extras">
+                <b>✨ Extras del juego</b>
+                <ul>
+                  <li>🧑 Elige tu guardián: <b>Cristian</b>, <b>Juan</b> o <b>Eco</b>.</li>
+                  <li>🔥 <b>Racha:</b> cada 3 aciertos seguidos ganas 5 puntos extra.</li>
+                  <li>⚡ <b>Pregunta rápida</b> entre niveles: si aciertas, ganas 5 segundos.</li>
+                  <li>🏆 Tu mejor puntaje queda guardado como <b>récord</b>.</li>
+                </ul>
+              </div>
+              <button class="boton-principal" id="botonEntendido" type="button">¡Entendido, a jugar! ➜</button>
+              <button class="boton-texto" id="botonVolverInicio" type="button">Volver</button>
+            </section>
+
+            <!-- Entre niveles -->
+            <section class="tarjeta oculta" id="pantallaNivel">
+              <div class="pictograma" aria-hidden="true">🌿</div>
+              <div class="pildora">¡ZONA LIMPIA!</div>
+              <h2 id="tituloNivel">¡El sendero quedó impecable!</h2>
+              <p id="textoNivel"></p>
+              <div class="resaltados"><span>⭐ <b id="puntosNivel">0</b> puntos</span><span>⏱ <b id="tiempoNivel">00:00</b> restantes</span></div>
+              <div class="pregunta">
+                <p class="pregunta-titulo">⚡ PREGUNTA RÁPIDA · +5 SEGUNDOS</p>
+                <p class="pregunta-texto">¿En qué caneca va <b id="preguntaResiduo"></b>?</p>
+                <div class="opciones">
+                  <button type="button" class="opcion opcion-papel" data-respuesta="papel">📄 Papel</button>
+                  <button type="button" class="opcion opcion-plastico" data-respuesta="plastico">🧴 Plástico</button>
+                  <button type="button" class="opcion opcion-organico" data-respuesta="organico">🍌 Orgánicos</button>
+                </div>
+                <p class="pregunta-resultado" id="preguntaResultado" aria-live="polite"></p>
+              </div>
+              <p class="proximo-nivel" id="proximoNivel"></p>
+              <button class="boton-principal" id="botonSiguiente" type="button">Continuar al siguiente nivel ➜</button>
+            </section>
+
+            <!-- Pausa -->
+            <section class="tarjeta oculta" id="pantallaPausa">
+              <div class="pictograma" aria-hidden="true">⏸️</div>
+              <div class="pildora">UN RESPIRO VERDE</div>
+              <h2>Juego en pausa</h2>
+              <p>Tu misión sigue aquí. ¡Regresa cuando estés listo!</p>
+              <button class="boton-principal" id="botonReanudar" type="button">Reanudar ➜</button>
+              <button class="boton-texto" id="botonReiniciar" type="button">Reiniciar juego</button>
+            </section>
+
+            <!-- Pantalla 4: Resultados -->
+            <section class="tarjeta oculta" id="pantallaResultados">
+              <div class="pictograma" id="resultadoIcono" aria-hidden="true">🏆</div>
+              <div class="pildora" id="resultadoEtiqueta">MISIÓN CUMPLIDA</div>
+              <h2 id="resultadoTitulo">¡Salvaste el parque!</h2>
+              <p id="resultadoTexto"></p>
+              <div class="resultados">
+                <div><small>PUNTOS</small><strong id="finalPuntos">0</strong></div>
+                <div><small>RESIDUOS</small><strong id="finalResiduos">0/15</strong></div>
+                <div><small>ERRORES</small><strong id="finalErrores">0</strong></div>
+              </div>
+              <div class="medalla" id="medalla"></div>
+              <p class="record" id="lineaRecord"></p>
+              <div class="repaso oculta" id="repaso"><b>📝 Para repasar:</b><ul id="listaRepaso"></ul></div>
+              <button class="boton-principal" id="botonJugarOtraVez" type="button">Jugar otra vez ↻</button>
+              <button class="boton-texto" id="botonCambiarPersonaje" type="button">Cambiar de personaje</button>
+            </section>
+
+          </div>
+        </div>
+
+        <!-- Mochila y progreso del nivel -->
+        <div class="barra-info">
+          <div class="mochila"><span class="glifo" aria-hidden="true">🎒</span><div><small>EN TU MOCHILA</small><strong id="mochila">Vacía</strong></div></div>
+          <div class="progreso">
+            <div class="progreso-arriba"><span>PROGRESO DEL NIVEL</span><span id="progresoTexto">0 de 4 residuos</span></div>
+            <div class="progreso-pista"><div class="progreso-barra" id="progresoBarra"></div></div>
+          </div>
+          <div class="racha-caja" title="Aciertos seguidos: cada 3 dan 5 puntos extra"><small>RACHA</small><strong id="racha">🔥 0</strong></div>
+          <button class="boton-ayuda" id="botonAyuda" type="button" title="Ver instrucciones">? <span>Ayuda</span></button>
+        </div>
+      </section>
+
+      <!-- Controles táctiles (solo se ven en pantallas pequeñas) -->
+      <section class="controles-tactiles" aria-label="Controles táctiles">
+        <div class="cruceta">
+          <button type="button" class="flecha flecha-arriba" data-direccion="arriba" aria-label="Arriba">▲</button>
+          <button type="button" class="flecha flecha-izquierda" data-direccion="izquierda" aria-label="Izquierda">◀</button>
+          <button type="button" class="flecha flecha-abajo" data-direccion="abajo" aria-label="Abajo">▼</button>
+          <button type="button" class="flecha flecha-derecha" data-direccion="derecha" aria-label="Derecha">▶</button>
+        </div>
+        <button type="button" class="boton-accion" id="botonTactilAccion">RECOGER<br>/ DEJAR ✦</button>
+      </section>
+
+      <!-- ===== GUÍA Y CONTROLES ===== -->
+      <div class="tarjetas">
+        <section class="guia" aria-label="Guía rápida de reciclaje">
+          <div class="guia-titulo"><span aria-hidden="true">✳</span><div><h3>¿A dónde va cada residuo?</h3><p>Deposita cada residuo en su caneca de la zona de reciclaje.</p></div></div>
+          <div class="canecas-guia">
+            <div><span class="mini-caneca caneca-papel" aria-hidden="true">📄</span><b>Papel</b><small>Hojas, periódico, sobres y cartón</small></div>
+            <div><span class="mini-caneca caneca-plastico" aria-hidden="true">🧴</span><b>Plástico</b><small>Botellas, vasos, bolsas y tapas</small></div>
+            <div><span class="mini-caneca caneca-organico" aria-hidden="true">🍌</span><b>Orgánicos</b><small>Cáscaras, restos de comida y hojas secas</small></div>
+          </div>
+          <p class="dato-colombia">📌 <b>Dato:</b> en Colombia, desde 2021, el código nacional de colores usa la caneca <b>blanca</b> para aprovechables (papel, cartón, plástico, vidrio y metal), la <b>verde</b> para orgánicos y la <b>negra</b> para no aprovechables.</p>
+        </section>
+
+        <section class="controles" aria-label="Controles del juego">
+          <div class="controles-cabecera"><h3>Controles del guardián</h3><span>TECLADO O PANTALLA</span></div>
+          <div class="teclas">
+            <div class="grupo-teclas"><span class="tecla">↑</span><div><span class="tecla">←</span><span class="tecla">↓</span><span class="tecla">→</span></div></div>
+            <span class="separador">o</span>
+            <div class="grupo-teclas"><span class="tecla">W</span><div><span class="tecla">A</span><span class="tecla">S</span><span class="tecla">D</span></div></div>
+            <div class="accion"><span class="tecla tecla-ancha">E / ESPACIO</span><small>Recoger / depositar</small></div>
+          </div>
+          <p class="ayuda-toque">También puedes tocar un residuo o una caneca: tu guardián caminará hasta allí. <b>P</b> pausa el juego.</p>
+        </section>
+      </div>
+    </main>
+
+    <footer>🌿 Aprende, juega y transforma tu entorno. · Hecho por Cristian López y Juan Noriega.</footer>
+  </div>
+
+  <!-- p5.js va guardado en la carpeta libreria/ para que el juego funcione sin internet -->
+  <script src="libreria/p5.min.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
