@@ -1,17 +1,5 @@
-Carpeta de imágenes y sonidos (sección 17 del documento).
+Imágenes del juego.
 
-- Cristian_Lopez.jpeg y Juan_Noriega.jpeg: fotos originales de los estudiantes.
-- personajes/cristian_2.jpeg: foto que se usa ahora para Cristian.
-- personajes/
-    *-retrato.jpg   foto de la tarjeta para elegir personaje.
-    *-cara.png      cara en círculo (recorte de la foto).
-    caras.js        las mismas caras guardadas como texto (data URI). Three.js las necesita así
-                    para que el juego funcione al abrir index.html con doble clic, sin servidor.
-    eco-retrato.jpg es una captura de Eco tomada del mismo juego en 3D.
-- El colegio, las canecas, los residuos y el cuerpo de los personajes se arman con código
-  en escena3d.js (con Three.js), y sus texturas se pintan con canvas en la sección 3 de ese archivo.
-- Los sonidos se generan con el navegador (Web Audio) en la función sonar() de game.js.
-
-Para agregar otro personaje con foto: guardar su cara (cuadrada, 256 x 256) y su retrato (3:4)
-en personajes/, agregar la cara a caras.js y añadirlo a la lista PERSONAJES de game.js
-con los colores de su ropa.
+personajes/cristian-cara.png y juan-cara.png: caras de los personajes (recortes de las fotos).
+personajes/caras.js: las mismas caras guardadas como texto, para que p5.js las pueda cargar
+al abrir el juego con doble clic, sin servidor.
