@@ -42,7 +42,6 @@ const LIMITES = { izquierda: 30, derecha: 1012, arriba: 240, abajo: 552 };  // z
 const DISTANCIA_PARA_RECOGER = 75;
 const DISTANCIA_PARA_DEPOSITAR = 95;
 const Y_DEPOSITO = 240;                    // altura a la que el personaje se para frente a las canecas
-const LAGO = { x: 201, y: 467, radioX: 174, radioY: 70 };  // lago del nivel 3
 
 // Extras: mejoras que agregamos además de lo que pide el documento.
 const RACHA_PARA_BONO = 3;          // cada 3 aciertos seguidos sin errores...
@@ -50,72 +49,78 @@ const PUNTOS_BONO_RACHA = 5;        // ...dan 5 puntos extra
 const SEGUNDOS_BONO_PREGUNTA = 5;   // acertar la pregunta rápida entre niveles regala 5 segundos
 
 
-/* ===== 2. NIVELES, CANECAS Y RESIDUOS ===== */
+/* ===== 2. NIVELES, CANECAS Y RESIDUOS =====
+   El juego pasa en nuestro colegio, la I.E. Ángela María Torres Suárez, durante la semana ambiental.
+   Cada nivel es un lugar del colegio con la basura que de verdad se encuentra allí. */
 
 // Tres niveles: fácil, intermedio y difícil (sección 15 del documento).
+// "ocupado" son zonas con muebles donde no se ponen residuos: [x, y, ancho, alto].
 const NIVELES = [
   {
-    nombre: 'Fácil', zona: 'El sendero', cantidad: 4,
+    nombre: 'Fácil', zona: 'El salón', momento: 'después de clase', cantidad: 4, exterior: false,
     canecaIlumina: true, nombresVisibles: true, viento: false,
-    tituloLimpio: '¡El sendero quedó impecable!',
-    textoLimpio: '¡Lo estás haciendo genial! Ahora la zona de picnic necesita tu ayuda.'
+    ocupado: [[56, 220, 308, 90]],
+    tituloLimpio: '¡El salón quedó impecable!',
+    textoLimpio: 'Sonó la campana del descanso… y la tienda escolar se llenó de empaques.'
   },
   {
-    nombre: 'Intermedio', zona: 'La zona de picnic', cantidad: 5,
+    nombre: 'Intermedio', zona: 'La tienda escolar', momento: 'en el descanso', cantidad: 5, exterior: true,
     canecaIlumina: false, nombresVisibles: true, viento: false,
-    novedad: '5 residuos y las canecas ya no se iluminan: ¡tú decides dónde va cada uno!',
-    tituloLimpio: '¡La zona de picnic quedó limpia!',
-    textoLimpio: '¡Casi lo logras! Falta limpiar el rincón del lago.'
+    ocupado: [[36, 236, 308, 94]],
+    novedad: '5 residuos del descanso y las canecas ya no se iluminan. ¡Ojo con los empaques brillantes!',
+    tituloLimpio: '¡La tienda escolar quedó limpia!',
+    textoLimpio: 'Terminó el partido del descanso y la cancha quedó llena de basura.'
   },
   {
-    nombre: 'Difícil', zona: 'El rincón del lago', cantidad: 6,
+    nombre: 'Difícil', zona: 'La cancha', momento: 'después del partido', cantidad: 6, exterior: true,
     canecaIlumina: false, nombresVisibles: false, viento: true,
-    novedad: '6 residuos que suelen confundir, el viento los mueve y su nombre solo aparece cuando te acercas.'
+    ocupado: [[28, 288, 116, 100]],
+    novedad: '6 residuos que confunden: el mismo material cambia de caneca si está sucio o mojado. El viento los mueve y el nombre solo aparece al acercarte.'
   }
 ];
 const TOTAL_RESIDUOS = NIVELES.reduce((suma, n) => suma + n.cantidad, 0);  // 15
 
-// Canecas de la zona de reciclaje (escenario 2 del documento).
+// Canecas del punto ecológico con el código de colores de Colombia (Resolución 2184 de 2019).
 const CANECAS = [
-  { tipo: 'papel',    nombre: 'PAPEL',     x: 696, color: '#3f8fd2', oscuro: '#235c90' },
-  { tipo: 'plastico', nombre: 'PLÁSTICO',  x: 825, color: '#f2b632', oscuro: '#a8770f' },
-  { tipo: 'organico', nombre: 'ORGÁNICOS', x: 954, color: '#4caf68', oscuro: '#2a7643' }
+  { tipo: 'aprovechable',   nombre: 'BLANCA', x: 696, color: '#f1f4f0', oscuro: '#9aa8a2' },
+  { tipo: 'organico',       nombre: 'VERDE',  x: 825, color: '#4caf68', oscuro: '#2a7643' },
+  { tipo: 'noAprovechable', nombre: 'NEGRA',  x: 954, color: '#3d464c', oscuro: '#1f262b' }
 ];
-const TIPO_EN_TEXTO = { papel: 'de papel', plastico: 'de plástico', organico: 'orgánico' };
 
-// Cada residuo tiene: nombre, tipo (su caneca), dibujo, nivel en el que aparece y un dato para aprender.
+// Cada residuo tiene: nombre, tipo (su caneca), dibujo, nivel en el que aparece
+// y un dato que explica POR QUÉ va en esa caneca (se muestra al acertar y al equivocarse).
 const RESIDUOS = [
-  // Nivel 1 · Fácil
-  { nombre: 'Hoja de papel',      tipo: 'papel',    dibujo: 'hoja',      nivel: 1, dato: 'El papel limpio se puede reciclar varias veces.' },
-  { nombre: 'Periódico',          tipo: 'papel',    dibujo: 'periodico', nivel: 1, dato: 'Con papel reciclado se fabrican cuadernos y cajas nuevas.' },
-  { nombre: 'Botella plástica',   tipo: 'plastico', dibujo: 'botella',   nivel: 1, dato: 'Vacía y aplasta la botella antes de reciclarla.' },
-  { nombre: 'Vaso plástico',      tipo: 'plastico', dibujo: 'vaso',      nivel: 1, dato: 'Un vaso plástico puede tardar cientos de años en degradarse.' },
-  { nombre: 'Cáscara de banano',  tipo: 'organico', dibujo: 'banano',    nivel: 1, dato: 'Las cáscaras se convierten en abono para las plantas.' },
-  { nombre: 'Restos de manzana',  tipo: 'organico', dibujo: 'manzana',   nivel: 1, dato: 'Los restos de fruta sirven para hacer compost.' },
-  // Nivel 2 · Intermedio
-  { nombre: 'Caja de cartón',     tipo: 'papel',    dibujo: 'caja',      nivel: 2, dato: 'El cartón va con el papel. Aplástalo para que ocupe menos espacio.' },
-  { nombre: 'Sobre de carta',     tipo: 'papel',    dibujo: 'sobre',     nivel: 2, dato: 'Los sobres de papel también se reciclan.' },
-  { nombre: 'Bolsa plástica',     tipo: 'plastico', dibujo: 'bolsa',     nivel: 2, dato: 'Mejor aún: reutiliza las bolsas o usa bolsas de tela.' },
-  { nombre: 'Cuchara plástica',   tipo: 'plastico', dibujo: 'cuchara',   nivel: 2, dato: 'Los cubiertos desechables son de plástico: evita usarlos.' },
-  { nombre: 'Cáscara de naranja', tipo: 'organico', dibujo: 'naranja',   nivel: 2, dato: 'Más de la mitad de la basura de los hogares es orgánica.' },
-  { nombre: 'Restos de pan',      tipo: 'organico', dibujo: 'pan',       nivel: 2, dato: 'Los restos de comida son orgánicos y se pueden compostar.' },
-  // Nivel 3 · Difícil (residuos que suelen confundir)
-  { nombre: 'Cartón de huevos',   tipo: 'papel',    dibujo: 'cartonHuevos', nivel: 3, dato: 'Está hecho de papel prensado, por eso va con el papel.' },
-  { nombre: 'Tubo de cartón',     tipo: 'papel',    dibujo: 'tubo',      nivel: 3, dato: 'El tubo del papel higiénico es cartón: va con el papel.' },
-  { nombre: 'Tapa de botella',    tipo: 'plastico', dibujo: 'tapa',      nivel: 3, dato: 'Aunque es pequeña, la tapa también es plástico.' },
-  { nombre: 'Envase de yogur',    tipo: 'plastico', dibujo: 'yogur',     nivel: 3, dato: 'Enjuaga los envases: limpios y secos se reciclan mejor.' },
-  { nombre: 'Cáscara de huevo',   tipo: 'organico', dibujo: 'huevo',     nivel: 3, dato: 'Aunque es dura, la cáscara de huevo es orgánica y sirve de abono.' },
-  { nombre: 'Hojas secas',        tipo: 'organico', dibujo: 'hojas',     nivel: 3, dato: 'Las hojas secas del parque también son orgánicas.' }
+  // Nivel 1 · El salón, después de clase
+  { nombre: 'Hoja de cuaderno',      tipo: 'aprovechable',   dibujo: 'hoja',            nivel: 1, dato: 'El papel limpio y seco va en la blanca y se puede reciclar varias veces.' },
+  { nombre: 'Fotocopias',            tipo: 'aprovechable',   dibujo: 'fotocopias',      nivel: 1, dato: 'Las fotocopias que ya no sirven son papel aprovechable: van en la blanca.' },
+  { nombre: 'Botella de agua',       tipo: 'aprovechable',   dibujo: 'botella',         nivel: 1, dato: 'Las botellas plásticas vacías van en la blanca. ¡Mejor si las aplastas!' },
+  { nombre: 'Cáscara de banano',     tipo: 'organico',       dibujo: 'banano',          nivel: 1, dato: 'Las cáscaras de la lonchera son orgánicas: van en la verde y se vuelven abono.' },
+  { nombre: 'Cáscara de mandarina',  tipo: 'organico',       dibujo: 'mandarina',       nivel: 1, dato: 'Los restos de fruta son orgánicos: van en la verde.' },
+  { nombre: 'Pañuelo usado',         tipo: 'noAprovechable', dibujo: 'panuelo',         nivel: 1, dato: 'Los pañuelos y el papel higiénico usados no se aprovechan: van en la negra.' },
+  // Nivel 2 · La tienda escolar, en el descanso
+  { nombre: 'Lata de gaseosa',       tipo: 'aprovechable',   dibujo: 'lata',            nivel: 2, dato: 'Las latas son metal aprovechable: vacías van en la blanca.' },
+  { nombre: 'Caja de jugo',          tipo: 'aprovechable',   dibujo: 'cajaJugo',        nivel: 2, dato: 'Aunque tiene varias capas, la caja de jugo vacía es aprovechable: va en la blanca.' },
+  { nombre: 'Paquete de papas',      tipo: 'noAprovechable', dibujo: 'paquetePapas',    nivel: 2, dato: 'Los empaques metalizados (papas, chitos) no se aprovechan: van en la negra.' },
+  { nombre: 'Envoltura de chocolatina', tipo: 'noAprovechable', dibujo: 'chocolatina',  nivel: 2, dato: 'Las envolturas brillantes son metalizadas: van en la negra.' },
+  { nombre: 'Servilleta con grasa',  tipo: 'noAprovechable', dibujo: 'servilletaGrasa', nivel: 2, dato: 'El papel sucio con comida ya no se puede reciclar: va en la negra.' },
+  { nombre: 'Corazón de manzana',    tipo: 'organico',       dibujo: 'manzana',         nivel: 2, dato: 'Los restos de fruta son orgánicos: van en la verde.' },
+  // Nivel 3 · La cancha, después del partido (residuos que confunden)
+  { nombre: 'Botella de hidratante', tipo: 'aprovechable',   dibujo: 'bebida',          nivel: 3, dato: 'Vacía la botella: el plástico limpio y seco va en la blanca.' },
+  { nombre: 'Caja de cartón limpia', tipo: 'aprovechable',   dibujo: 'caja',            nivel: 3, dato: 'El cartón limpio y seco va en la blanca. Aplástalo para que ocupe menos.' },
+  { nombre: 'Caja de pizza con grasa', tipo: 'noAprovechable', dibujo: 'cajaPizza',     nivel: 3, dato: 'Si el cartón tiene grasa o comida ya no se aprovecha: va en la negra.' },
+  { nombre: 'Periódico mojado',      tipo: 'noAprovechable', dibujo: 'periodicoMojado', nivel: 3, dato: 'El papel mojado pierde su valor para reciclar: va en la negra.' },
+  { nombre: 'Cáscara de naranja',    tipo: 'organico',       dibujo: 'naranja',         nivel: 3, dato: 'Las cáscaras de las naranjas del medio tiempo van en la verde.' },
+  { nombre: 'Restos de arroz',       tipo: 'organico',       dibujo: 'arroz',           nivel: 3, dato: 'Los restos de comida son orgánicos: van en la verde.' }
 ];
 
-// Extra: pregunta rápida entre niveles, con residuos que no aparecen en el parque.
+// Extra: pregunta rápida entre niveles, con residuos del colegio que no aparecen en los escenarios.
 const PREGUNTAS = [
-  { nombre: 'una revista vieja',      tipo: 'papel',    dato: 'Las revistas y los cuadernos viejos van con el papel.' },
-  { nombre: 'una caja de cereal',     tipo: 'papel',    dato: 'Las cajas de cartón delgado también son papel.' },
-  { nombre: 'un tarro de champú',     tipo: 'plastico', dato: 'Los envases de aseo son plástico: enjuágalos antes de reciclarlos.' },
-  { nombre: 'un tarro de detergente', tipo: 'plastico', dato: 'Los tarros de detergente son plástico aprovechable.' },
-  { nombre: 'una cáscara de papa',    tipo: 'organico', dato: 'Las cáscaras de verduras van con los orgánicos.' },
-  { nombre: 'la borra del café',      tipo: 'organico', dato: 'El café usado es un gran abono para las plantas.' }
+  { nombre: 'una tapa de gaseosa',              tipo: 'aprovechable',   dato: 'Las tapas plásticas limpias van en la blanca.' },
+  { nombre: 'un cuaderno viejo',                tipo: 'aprovechable',   dato: 'El papel de los cuadernos viejos es aprovechable: va en la blanca.' },
+  { nombre: 'un vaso de icopor con comida',     tipo: 'noAprovechable', dato: 'El icopor sucio con comida no se aprovecha: va en la negra.' },
+  { nombre: 'un empaque de galletas',           tipo: 'noAprovechable', dato: 'Los empaques metalizados de galletas van en la negra.' },
+  { nombre: 'la borra del tinto de los profes', tipo: 'organico',       dato: 'El café usado es orgánico: va en la verde y sirve de abono.' },
+  { nombre: 'una cáscara de huevo de la lonchera', tipo: 'organico',    dato: 'Las cáscaras de huevo son orgánicas: van en la verde.' }
 ];
 
 // Extra: personajes que se pueden elegir. Cristian y Juan usan la foto de su cara;
@@ -160,7 +165,7 @@ let aciertos = 0;               // residuos bien clasificados
 let errores = 0;                // residuos mal clasificados
 let paraRepasar = [];           // residuos en los que se equivocó (se muestran al final)
 let metaAlcanzada = false;      // se vuelve true al llegar a 100 puntos
-let parqueRecuperado = false;   // se vuelve true al limpiar los 3 niveles (escenario 3: parque limpio)
+let colegioRecuperado = false;  // se vuelve true al limpiar los 3 niveles (el colegio queda limpio)
 
 // Extras
 let personajeElegido = leerGuardado('guardianes-personaje') || 'cristian';
@@ -192,22 +197,22 @@ let tiempoMostrado = '';
 let esperaPaso = 0;
 let esperaPajaro = 0;
 
-// Flores del parque: aparecen poco a poco a medida que se limpia.
-const FLORES = Array.from({ length: 40 }, (_, i) => ({
-  x: azar(i * 6.13 + 4) * ANCHO,
-  y: 258 + azar(i * 3.7) * 300,
-  color: ['#ffdea3', '#f8c9cd', '#e4d5ff', '#fff3b3'][i % 4],
-  escala: 0.5 + azar(i) * 0.55,
-  aparece: i / 40               // porcentaje de limpieza necesario para que aparezca
+// Papelitos y migas en el piso: desaparecen poco a poco a medida que se limpia.
+const PAPELITOS = Array.from({ length: 45 }, (_, i) => ({
+  x: 20 + azar(i * 6.13 + 4) * (ANCHO - 40),
+  y: 262 + azar(i * 3.7) * 310,
+  tamano: 2 + azar(i * 1.7) * 3,
+  giro: azar(i * 9.1) * Math.PI,
+  color: ['#f4f1e6', '#e9d48a', '#d98b6a', '#b9c4c9'][i % 4],
+  seLimpia: (i + 1) / 46        // porcentaje de limpieza con el que desaparece
 }));
-
 
 /* ===== 4. p5.js: setup() se ejecuta una vez y draw() 60 veces por segundo ===== */
 
 function setup() {
   lienzo = createCanvas(ANCHO, ALTO);
   lienzo.parent('contenedorJuego');
-  lienzo.elt.setAttribute('aria-label', 'Parque del juego. Muévete con las flechas o W A S D, o toca el suelo. E o espacio recoge y deposita.');
+  lienzo.elt.setAttribute('aria-label', 'Escenario del colegio. Muévete con las flechas o W A S D, o toca el suelo. E o espacio recoge y deposita.');
   pantalla = p5.instance;
   strokeJoin(ROUND);
   textFont('sans-serif');
@@ -242,7 +247,7 @@ function iniciarJuego() {
   errores = 0;
   paraRepasar = [];
   metaAlcanzada = false;
-  parqueRecuperado = false;
+  colegioRecuperado = false;
   particulas = [];
   racha = 0;
   preguntas = shuffle(PREGUNTAS);
@@ -251,7 +256,7 @@ function iniciarJuego() {
   estado = 'jugando';
   mostrarPantalla(null);
   actualizarMarcador();
-  avisar(`🌱 ¡Vamos, ${personaje().nombre}! Nivel 1 · Fácil: el sendero. Recoge un residuo y llévalo a la zona de reciclaje.`);
+  avisar(`🌱 ¡Vamos, ${personaje().nombre}! Nivel 1 · Fácil: el salón, después de clase. Recoge un residuo y llévalo al punto ecológico.`);
   sonar(520, 0.1);
   setTimeout(() => sonar(720, 0.13), 130);
 }
@@ -268,7 +273,7 @@ function prepararNivel(numero) {
   fondoNivel = crearFondo(numero);
 }
 
-// Elige al azar los residuos del nivel (al menos uno de cada tipo) y los ubica en el parque.
+// Elige al azar los residuos del nivel (al menos uno de cada tipo) y los ubica en el escenario.
 function elegirResiduos(numero) {
   const posibles = shuffle(RESIDUOS.filter(r => r.nivel === numero));
   const elegidos = CANECAS.map(caneca => posibles.find(r => r.tipo === caneca.tipo));
@@ -283,16 +288,15 @@ function elegirResiduos(numero) {
   });
 }
 
-// Busca un lugar en el pasto que no tape las canecas, los árboles, el lago ni otro residuo.
+// Busca un lugar en el piso que no tape las canecas, los muebles ni otro residuo.
 function buscarLugarLibre(ocupados, numero) {
+  const muebles = NIVELES[numero - 1].ocupado;
   for (let intento = 0; intento < 400; intento++) {
     const x = random(80, 980);
     const y = random(290, 512);
     const libre =
-      !(x > 600 && y < 335) &&                              // frente a las canecas
-      !(x < 130 && y < 345) && !(x > 950 && y < 385) &&     // troncos de los árboles grandes
-      !(numero === 2 && x > 250 && x < 510 && y < 335) &&   // mesa de picnic
-      !(numero === 3 && estaEnElLago(x, y, 45)) &&
+      !(x > 600 && y < 335) &&                              // frente al punto ecológico
+      !muebles.some(([mx, my, ancho, alto]) => x > mx - 30 && x < mx + ancho + 30 && y > my - 30 && y < my + alto + 40) &&
       dist(x, y, INICIO_JUGADOR.x, INICIO_JUGADOR.y) > 110 &&
       ocupados.every(o => dist(x, y, o.x, o.y) > 125);
     if (libre) return { x, y };
@@ -361,7 +365,7 @@ function interactuar() {
   if (residuoCargado) {
     const caneca = canecaMasCercana();
     if (caneca) depositar(caneca);
-    else avisar('🗑️ Acércate a una de las canecas de la zona de reciclaje.');
+    else avisar('🗑️ Acércate a una de las canecas del punto ecológico.');
   } else {
     const residuo = residuoMasCercano();
     if (residuo) recoger(residuo);
@@ -395,7 +399,7 @@ function recoger(residuo) {
   residuoCargado = residuo;
   residuos = residuos.filter(r => r !== residuo);
   const pista = NIVELES[nivel - 1].canecaIlumina ? ' La caneca correcta se ilumina.' : '';
-  avisar(`🎒 Recogiste: ${residuo.nombre}. Llévalo a la zona de reciclaje.${pista}`);
+  avisar(`🎒 Recogiste: ${residuo.nombre}. Llévalo al punto ecológico.${pista}`);
   lanzarParticulas(residuo.x, residuo.y - 20, 8, 'hoja');
   sonar(620, 0.08);
   actualizarMarcador();
@@ -423,7 +427,7 @@ function depositar(caneca) {
     }
     if (!metaAlcanzada && puntos >= META_PUNTOS) {
       metaAlcanzada = true;
-      mensaje = `🎯 ¡Llegaste a ${META_PUNTOS} puntos y ganaste! Limpia todo el parque para ganar plata u oro.`;
+      mensaje = `🎯 ¡Llegaste a ${META_PUNTOS} puntos y ganaste! Limpia todo el colegio para ganar plata u oro.`;
     }
     avisar(mensaje);
     lanzarParticulas(caneca.x, 180, 28, 'estrella');
@@ -440,7 +444,7 @@ function depositar(caneca) {
     if (!paraRepasar.some(p => p.nombre === residuo.nombre)) {
       paraRepasar.push({ nombre: residuo.nombre, caneca: correcta.nombre.toLowerCase() });
     }
-    avisar(`❌ −${PUNTOS_POR_ERROR} puntos. ${residuo.nombre} no va en la caneca de ${caneca.nombre.toLowerCase()}: es un residuo ${TIPO_EN_TEXTO[residuo.tipo]}.`, true);
+    avisar(`❌ −${PUNTOS_POR_ERROR} puntos. No va en la ${caneca.nombre.toLowerCase()}. ${residuo.dato}`, true);
     lanzarParticulas(caneca.x, 180, 12, 'hoja');
     sonar(220, 0.2, 'triangle');
     actualizarMarcador();
@@ -475,7 +479,7 @@ function siguienteNivel() {
   mostrarPantalla(null);
   actualizarMarcador();
   const n = NIVELES[nivel - 1];
-  avisar(`🌳 Nivel ${nivel} · ${n.nombre}: ${n.zona.toLowerCase()}.`);
+  avisar(`🏫 Nivel ${nivel} · ${n.nombre}: ${n.zona.toLowerCase()}, ${n.momento}.`);
   sonar(630, 0.1);
   setTimeout(() => sonar(820, 0.12), 110);
 }
@@ -508,7 +512,7 @@ function responderPregunta(tipo) {
     setTimeout(() => sonar(880, 0.12), 100);
   } else {
     const caneca = CANECAS.find(c => c.tipo === pregunta.tipo).nombre.toLowerCase();
-    el('preguntaResultado').textContent = `❌ Va en la caneca de ${caneca}. ${pregunta.dato}`;
+    el('preguntaResultado').textContent = `❌ Va en la caneca ${caneca}. ${pregunta.dato}`;
     sonar(220, 0.2, 'triangle');
   }
   actualizarMarcador();
@@ -567,45 +571,46 @@ function pausarSiJuega() {
 
 
 /* ===== 6. FIN DEL JUEGO Y MEDALLAS =====
-   Victoria: alcanzar 100 puntos antes de que termine el tiempo (regla 5).
-   Derrota: terminar el tiempo sin alcanzar la meta (GDD).
-   Si además se limpian los 3 niveles, el parque vuelve a la vida (escenario 3). */
+   Victoria: alcanzar 100 puntos antes de que suene el timbre (regla 5).
+   Derrota: que suene el timbre sin alcanzar la meta (GDD).
+   Si además se limpian los 3 lugares, el colegio queda limpio y hay celebración. */
 
-function terminarJuego(parqueLimpio) {
+function terminarJuego(colegioLimpio) {
   if (estado === 'celebrando' || estado === 'final') return;
   destino = null;
   flechasTactiles.clear();
-  if (parqueLimpio) {
-    // Escenario 3: aparecen flores, animales y un arcoíris antes de los resultados.
-    parqueRecuperado = true;
+  if (colegioLimpio) {
+    // Celebración: los papelitos desaparecen, sale el arcoíris y cae confeti antes de los resultados.
+    colegioRecuperado = true;
     estado = 'celebrando';
-    avisar('🌳 ¡El parque volvió a la vida! Los animales regresaron.');
+    avisar('🏫 ¡El colegio quedó limpio! Cada residuo llegó al punto ecológico.');
     sonar(860, 0.22);
     setTimeout(() => sonar(1040, 0.35), 220);
     temporizadorCelebracion = setTimeout(() => mostrarResultados(true), 3500);
   } else {
+    sonarTimbre();
     mostrarResultados(false);
   }
   actualizarMarcador();
 }
 
-function mostrarResultados(parqueLimpio) {
+function mostrarResultados(colegioLimpio) {
   estado = 'final';
   const gano = metaAlcanzada;
   const nombre = personaje().nombre;
   let icono, etiqueta, titulo, texto;
-  if (gano && parqueLimpio) {
-    [icono, etiqueta, titulo] = ['🏆', 'MISIÓN CUMPLIDA', `¡Salvaste el parque, ${nombre}!`];
-    texto = 'El parque está limpio y los animales regresaron. ¡Eres un verdadero Guardián del Planeta!';
+  if (gano && colegioLimpio) {
+    [icono, etiqueta, titulo] = ['🏆', 'MISIÓN CUMPLIDA', `¡Colegio limpio, ${nombre}!`];
+    texto = 'El salón, la tienda escolar y la cancha quedaron limpios, y cada residuo llegó a su caneca. ¡Eres un verdadero Guardián del Planeta!';
   } else if (gano) {
     [icono, etiqueta, titulo] = ['🎯', '¡GANASTE!', `¡Meta alcanzada, ${nombre}!`];
-    texto = `Conseguiste ${META_PUNTOS} puntos antes de que terminara el tiempo, pero quedaron residuos en el parque. ¡Límpialo todo para ganar plata u oro!`;
-  } else if (parqueLimpio) {
-    [icono, etiqueta, titulo] = ['🌱', '¡CASI LO LOGRAS!', '¡El parque está limpio!'];
+    texto = `Conseguiste ${META_PUNTOS} puntos antes del timbre, pero quedó basura en el colegio. ¡Límpialo todo para ganar plata u oro!`;
+  } else if (colegioLimpio) {
+    [icono, etiqueta, titulo] = ['🌱', '¡CASI LO LOGRAS!', '¡El colegio está limpio!'];
     texto = `Pero te faltaron puntos: necesitas ${META_PUNTOS}. Clasifica con cuidado para no perder puntos.`;
   } else {
-    [icono, etiqueta, titulo] = ['⏰', '¡AÚN PUEDES MEJORAR!', '¡Se acabó el tiempo!'];
-    texto = `Necesitas ${META_PUNTOS} puntos antes de que el reloj llegue a cero. ¡Inténtalo otra vez!`;
+    [icono, etiqueta, titulo] = ['🔔', '¡AÚN PUEDES MEJORAR!', '¡Sonó el timbre!'];
+    texto = `Necesitas ${META_PUNTOS} puntos antes de que suene el timbre. ¡Inténtalo otra vez!`;
   }
 
   el('resultadoIcono').textContent = icono;
@@ -615,7 +620,7 @@ function mostrarResultados(parqueLimpio) {
   el('finalPuntos').textContent = puntos;
   el('finalResiduos').textContent = `${aciertos}/${TOTAL_RESIDUOS}`;
   el('finalErrores').textContent = errores;
-  el('medalla').textContent = elegirMedalla(gano, parqueLimpio);
+  el('medalla').textContent = elegirMedalla(gano, colegioLimpio);
 
   // Extra: récord guardado en este navegador
   const record = leerGuardado('guardianes-record');
@@ -630,22 +635,22 @@ function mostrarResultados(parqueLimpio) {
   // Lista de residuos en los que se equivocó, con su caneca correcta.
   el('repaso').classList.toggle('oculta', paraRepasar.length === 0);
   el('listaRepaso').innerHTML = paraRepasar
-    .map(p => `<li><b>${p.nombre}</b> va en la caneca de ${p.caneca}.</li>`)
+    .map(p => `<li><b>${p.nombre}</b> va en la caneca ${p.caneca}.</li>`)
     .join('');
 
   mostrarPantalla('pantallaResultados');
   actualizarMarcador();
-  if (!parqueLimpio) {
+  if (!colegioLimpio) {
     if (gano) { sonar(860, 0.22); setTimeout(() => sonar(1040, 0.35), 220); }
     else sonar(260, 0.25);
   }
 }
 
 // Medallas de reciclaje (sección 8 del documento).
-function elegirMedalla(gano, parqueLimpio) {
+function elegirMedalla(gano, colegioLimpio) {
   if (!gano) return '🌿 Cada intento es una oportunidad para aprender';
-  if (parqueLimpio && errores === 0) return '🥇 Medalla de oro · Reciclaje perfecto';
-  if (parqueLimpio) return '🥈 Medalla de plata · Parque limpio';
+  if (colegioLimpio && errores === 0) return '🥇 Medalla de oro · Reciclaje perfecto';
+  if (colegioLimpio) return '🥈 Medalla de plata · Colegio limpio';
   return '🥉 Medalla de bronce · Meta alcanzada';
 }
 
@@ -658,7 +663,7 @@ const PANTALLA_DEL_ESTADO = { inicio: 'pantallaInicio', pausa: 'pantallaPausa', 
 // Muestra una pantalla sobre el juego, o ninguna si id es null.
 function mostrarPantalla(id) {
   el('capa').classList.toggle('oculta', id === null);
-  el('capa').classList.toggle('capa-clara', id === 'pantallaResultados' && parqueRecuperado);
+  el('capa').classList.toggle('capa-clara', id === 'pantallaResultados' && colegioRecuperado);
   for (const p of PANTALLAS) el(p).classList.toggle('oculta', p !== id);
   if (id) (el(id).querySelector('.boton-principal') || el(id).querySelector('button')).focus({ preventScroll: true });
   else if (document.activeElement) document.activeElement.blur();
@@ -730,238 +735,172 @@ function cerrarInstrucciones() {
 
 
 /* ===== 8. DIBUJO DEL ESCENARIO =====
-   El parque se dibuja una sola vez por nivel en una imagen aparte (createGraphics).
-   Así el juego no tiene que redibujar miles de detalles 60 veces por segundo.
+   Cada nivel es un lugar del colegio. Se dibuja una sola vez por nivel en una imagen aparte
+   (createGraphics), así el juego no redibuja miles de detalles 60 veces por segundo.
    Las funciones con "c" usan el canvas normal de JavaScript (drawingContext),
    porque p5.js no trae degradados de color. */
 
 function crearFondo(numero) {
   const g = createGraphics(ANCHO, ALTO);
   g.strokeJoin(ROUND);
-  dibujarCielo(g);
-  dibujarMontanas(g);
-  dibujarPasto(g);
-  dibujarCamino(g);
-  dibujarArbol(g, 567, 258, 0.32, 2);
-  dibujarArbol(g, 386, 218, 0.52, 7);
-  if (numero === 1) dibujarBanca(g, 303, 259, 0.78);
-  if (numero === 2) dibujarPicnic(g);
-  if (numero === 3) dibujarLago(g);
-  dibujarArbol(g, 72, 308, 1.02, 3);
-  dibujarArbol(g, 1025, 353, 0.75, 12);
-  dibujarZonaDeReciclaje(g);
+  if (numero === 1) dibujarSalon(g);
+  if (numero === 2) dibujarTiendaEscolar(g);
+  if (numero === 3) dibujarCancha(g);
+  dibujarPuntoEcologico(g);
   dibujarCartelDelNivel(g, numero);
   return g;
 }
 
-function dibujarCielo(g) {
+// Nivel 1: el salón de clase después de la última hora.
+function dibujarSalon(g) {
+  // Pared y zócalo
   conContexto(g, c => {
-    c.fillStyle = degradadoLineal(c, 0, 0, 0, 335, ['#76aeb3', '#b0d6cf', '#c4e5be']);
-    c.fillRect(0, 0, ANCHO, ALTO);
-    const brillo = c.createRadialGradient(218, 54, 7, 218, 54, 255);
-    brillo.addColorStop(0, '#fffbe1e9');
-    brillo.addColorStop(0.2, '#ffeab37c');
-    brillo.addColorStop(1, '#ffeabd00');
-    c.fillStyle = brillo;
-    c.fillRect(0, 0, 480, 325);
+    c.fillStyle = degradadoLineal(c, 0, 0, 0, 250, ['#f3ead2', '#e4d8b8']);
+    c.fillRect(0, 0, ANCHO, 250);
   });
-  ovalo(217, 82, 26, 26, '#fff6c8', null, g);  // sol
+  rectangulo(0, 200, ANCHO, 50, 0, '#8fb9a0', null, g);
+  rectangulo(0, 198, ANCHO, 5, 0, '#6e9c83', null, g);
+  // Piso de baldosa
   g.noStroke();
-  g.fill(255, 250, 221, 24);
-  for (let i = 0; i < 7; i++) g.triangle(217, 80, 50 + i * 103, 340, 90 + i * 125, 340);  // rayos
-}
-
-function dibujarMontanas(g) {
-  g.noStroke();
-  g.fill('#76a99a');
-  g.beginShape();
-  g.vertex(0, 203);
-  g.bezierVertex(92, 149, 165, 174, 227, 150);
-  g.bezierVertex(378, 111, 489, 187, 625, 140);
-  g.bezierVertex(777, 98, 900, 166, ANCHO, 125);
-  g.vertex(ANCHO, ALTO);
-  g.vertex(0, ALTO);
-  g.endShape(CLOSE);
-
-  g.fill('#5d9988');
-  g.beginShape();
-  g.vertex(0, 223);
-  for (let x = 0; x <= ANCHO; x += 23) g.vertex(x, 195 + sin(x * 0.014) * 15 - 17 * azar(x * 2.1));
-  g.vertex(ANCHO, ALTO);
-  g.vertex(0, ALTO);
-  g.endShape(CLOSE);
-}
-
-function dibujarPasto(g) {
-  conContexto(g, c => {
-    c.fillStyle = degradadoLineal(c, 0, 180, 0, ALTO, ['#6ebd76', '#4fa866', '#377f52']);
-    c.fillRect(0, 212, ANCHO, ALTO - 212);
-  });
-  // Franja de pasto más clara
-  g.noStroke();
-  g.fill('#abd29439');
-  g.beginShape();
-  g.vertex(0, 279);
-  g.bezierVertex(205, 237, 361, 289, 550, 259);
-  g.bezierVertex(741, 230, 909, 257, ANCHO, 214);
-  g.vertex(ANCHO, 340);
-  g.bezierVertex(788, 316, 616, 366, 380, 338);
-  g.bezierVertex(185, 313, 78, 361, 0, 357);
-  g.endShape(CLOSE);
-  // Textura: puntitos claros y oscuros
-  g.fill('#fff9a516');
-  for (let i = 0; i < 1300; i++) g.rect(azar(i * 9.3) * ANCHO, 195 + azar(i * 17.1) * 390, 1 + azar(i * 3) * 2, 1.5);
-  g.fill('#0e563219');
-  for (let i = 0; i < 2600; i++) g.rect(azar(i * 3.1) * ANCHO, 195 + azar(i * 5.7) * 390, 1 + azar(i) * 2, 1 + azar(i * 2) * 1.5);
-  // Matas de pasto
-  for (let i = 0; i < 190; i++) {
-    const x = azar(i * 7.8 + 2) * ANCHO;
-    const y = 233 + azar(i * 4.18) * 350;
-    const z = 0.5 + azar(i * 5.1) * 1.2;
-    g.stroke(i % 3 === 0 ? '#d5e49c66' : '#1d804359');
-    g.strokeWeight(z);
-    g.line(x, y, x - 2 * z, y - 5 * z);
-    g.line(x, y, x + 3 * z, y - 6 * z);
+  for (let fila = 0; fila < 7; fila++) {
+    for (let col = 0; col < 15; col++) {
+      g.fill((fila + col) % 2 ? '#d9d2c3' : '#cec6b4');
+      g.rect(col * 80 - (fila % 2) * 40, 250 + fila * 50, 80, 50);
+    }
   }
-}
-
-function dibujarCamino(g) {
-  conContexto(g, c => {
-    const trazarCamino = (bajar) => {
-      c.beginPath();
-      c.moveTo(-40, 375 + bajar);
-      c.bezierCurveTo(143, 338 + bajar, 370, 451 + bajar, 578, 354 + bajar);
-      c.bezierCurveTo(750, 276 + bajar, 936, 304 + bajar, 1080, 279 + bajar);
-      c.lineTo(1080, 365 + bajar);
-      c.bezierCurveTo(889, 368 + bajar, 734, 375 + bajar, 612, 433 + bajar);
-      c.bezierCurveTo(346, 551 + bajar, 169, 443 + bajar, -40, 495 + bajar);
-      c.closePath();
-    };
-    trazarCamino(8);  // sombra del borde
-    c.fillStyle = '#253f2c53';
-    c.fill();
-    trazarCamino(0);
-    c.fillStyle = degradadoLineal(c, 0, 290, 0, 490, ['#d9ccab', '#eadfbe', '#a99d79']);
-    c.fill();
-    c.clip();  // lo siguiente solo se dibuja dentro del camino
-    for (let j = 0; j < 410; j++) {  // piedritas
-      const rx = 1.1 + azar(j * 7.2) * 5;
-      c.globalAlpha = 0.11 + azar(j * 5.67) * 0.22;
-      c.fillStyle = j % 3 === 0 ? '#4a5437' : '#fffae6';
-      c.beginPath();
-      c.ellipse(azar(j * 4.35) * ANCHO, 264 + azar(j * 8.32) * 285, rx, 1 + rx * 0.35, 0, 0, Math.PI * 2);
-      c.fill();
-    }
-    c.globalAlpha = 0.16;
-    c.lineWidth = 1.2;
-    for (let j = 0; j < 10; j++) {  // huellas del camino
-      c.beginPath();
-      c.moveTo(-20, 385 + j * 12);
-      c.bezierCurveTo(180, 340 + j * 10, 397, 470 + j * 6, 615, 374 + j * 8);
-      c.bezierCurveTo(790, 302 + j * 5, 950, 315 + j * 6, 1080, 294 + j * 9);
-      c.strokeStyle = j % 2 ? '#fff7db' : '#7a765c';
-      c.stroke();
-    }
+  g.stroke('#bdb4a1');
+  g.strokeWeight(1.5);
+  for (let y = 250; y < ALTO; y += 50) g.line(0, y, ANCHO, y);
+  conContexto(g, c => {  // sombra de la pared sobre el piso
+    c.fillStyle = degradadoLineal(c, 0, 250, 0, 290, ['#5a4a3040', '#5a4a3000']);
+    c.fillRect(0, 250, ANCHO, 40);
   });
+  // Tablero con el mensaje de la semana ambiental
+  rectangulo(66, 66, 500, 132, 6, '#7a5a3a', null, g);
+  rectangulo(76, 74, 480, 112, 4, '#2f5d4a', null, g);
+  rectangulo(70, 184, 492, 8, 2, '#8b6a46', null, g);
+  rectangulo(110, 178, 22, 6, 2, '#f4f1e6', null, g);  // tiza
+  escribir('SEMANA AMBIENTAL', 316, 100, 22, '#eef3e8', CENTER, g);
+  escribir('¡Separa en la fuente!', 316, 130, 16, '#d8e8d0', CENTER, g);
+  escribir('Blanca', 236, 160, 15, '#ffffff', CENTER, g);
+  escribir('Verde', 316, 160, 15, '#8fe0a0', CENTER, g);
+  escribir('Negra', 396, 160, 15, '#a9b2b8', CENTER, g);
+  // Reloj de pared
+  ovalo(590, 42, 17, 17, '#ffffff', '#3d4a45', g);
+  trazo([[590, 42], [590, 31]], '#2d3a35', 2, g);
+  trazo([[590, 42], [598, 46]], '#2d3a35', 2, g);
+  // Escritorio del profesor con libros y un globo terráqueo
+  ovalo(210, 308, 165, 14, '#5a4a3038', null, g);
+  rectangulo(70, 262, 16, 44, 2, '#7a5232', null, g);
+  rectangulo(334, 262, 16, 44, 2, '#7a5232', null, g);
+  rectangulo(96, 262, 228, 30, 3, '#8f6440', null, g);
+  rectangulo(60, 246, 300, 18, 4, '#a57447', '#7a5232', g);
+  rectangulo(108, 230, 44, 16, 2, '#c0504d', null, g);
+  rectangulo(112, 220, 38, 11, 2, '#3f7fbf', null, g);
+  trazo([[300, 246], [300, 236]], '#5d4a36', 3, g);
+  ovalo(300, 224, 13, 13, '#4f9fd8', '#2e6f9f', g);
+  ovalo(296, 220, 5, 4, '#6cc070', null, g);
 }
 
-function dibujarArbol(g, x, y, escala, semilla) {
+// Nivel 2: la tienda escolar y el patio en el descanso.
+function dibujarTiendaEscolar(g) {
   conContexto(g, c => {
-    c.translate(x, y);
-    c.scale(escala, escala);
-    c.fillStyle = '#0927183a';  // sombra
-    c.beginPath();
-    c.ellipse(19, 5, 94, 30, 0, 0, Math.PI * 2);
-    c.fill();
-    // Tronco: claro a la izquierda y oscuro a la derecha
-    c.fillStyle = degradadoLineal(c, -14, 0, 21, 0, ['#63492d', '#ac7b46', '#795032', '#422d24']);
-    c.beginPath();
-    c.moveTo(-13, 0);
-    c.bezierCurveTo(-14, -70, -10, -104, -30, -137);
-    c.lineTo(-12, -149);
-    c.bezierCurveTo(-4, -116, 8, -88, 13, -45);
-    c.lineTo(13, 0);
-    c.closePath();
-    c.fill();
-    c.lineCap = 'round';
-    c.lineWidth = 9;
-    c.strokeStyle = '#6d4a2c';
-    c.beginPath();
-    c.moveTo(-5, -83); c.lineTo(37, -118);
-    c.moveTo(-7, -105); c.lineTo(-54, -135);
-    c.stroke();
-    // Copa: grupos de hojas con luz arriba a la izquierda
-    const grupos = [[-44, -132, 48, 39], [-12, -165, 55, 49], [34, -149, 60, 47], [-49, -104, 49, 43], [9, -107, 65, 55], [57, -109, 43, 39]];
-    grupos.forEach(([gx, gy, rx, ry], i) => {
-      ovaloDegradado(c, gx, gy, rx, ry, i % 2 ? '#7bde94' : '#54c27a', i % 2 ? '#1a754f' : '#14603d');
-    });
-    for (let j = 0; j < 26; j++) {
-      const angulo = j * 2.399 + semilla;
-      const radio = Math.sqrt(azar(j + semilla)) * 61;
-      ovaloDegradado(c, radio * Math.cos(angulo) + 5, -133 + radio * 0.75 * Math.sin(angulo),
-        6 + azar(j * 3 + semilla) * 11, 3 + azar(j * 4 + semilla) * 7, '#b4efa36b', '#58ab678c');
-    }
+    c.fillStyle = degradadoLineal(c, 0, 0, 0, 80, ['#8cc8e0', '#c4e6ef']);
+    c.fillRect(0, 0, ANCHO, 80);
   });
-}
-
-function dibujarBanca(g, x, y, escala) {
-  g.push();
-  g.translate(x, y);
-  g.scale(escala);
-  ovalo(4, 2, 62, 16, '#0927184d', null, g);
-  trazo([[-35, -9], [-34, 21]], '#394e44', 6, g);
-  trazo([[38, -9], [36, 21]], '#394e44', 6, g);
-  for (let i = 0; i < 3; i++) rectangulo(-49, -33 + i * 9, 99, 8, 3, '#cf9c5e', '#855a37', g);
-  rectangulo(-53, 1, 109, 11, 4, '#aa774a', '#6d5537', g);
-  trazo([[-43, 20], [-43, 9]], '#5d5442', 6, g);
-  trazo([[45, 20], [45, 9]], '#5d5442', 6, g);
-  g.pop();
-}
-
-function dibujarPicnic(g) {
-  dibujarBanca(g, 288, 278, 0.75);
-  ovalo(409, 296, 72, 25, '#0927184d', null, g);
-  trazo([[371, 273], [370, 316]], '#765a41', 8, g);
-  trazo([[447, 273], [447, 316]], '#765a41', 8, g);
-  rectangulo(362, 266, 95, 14, 4, '#c18b54', '#815a39', g);   // mesa
-  rectangulo(378, 260, 16, 10, 3, '#efca84', null, g);
-  ovalo(430, 255, 13, 11, '#7fbf73', null, g);
-  trazo([[407, 264], [407, 185]], '#837451', 4, g);           // palo de la sombrilla
-  g.noStroke();
-  g.fill('#f7c08a');
-  g.beginShape();
-  g.vertex(329, 207);
-  g.quadraticVertex(374, 135, 407, 159);
-  g.quadraticVertex(465, 147, 493, 208);
-  g.endShape(CLOSE);
-  trazo([[330, 207], [493, 208]], '#a16e5b', 2, g);
-}
-
-function dibujarLago(g) {
-  const { x, y, radioX, radioY } = LAGO;
-  conContexto(g, c => {
-    c.fillStyle = '#09271840';
-    c.beginPath(); c.ellipse(x, y + 36, radioX + 8, radioY + 7, 0, 0, Math.PI * 2); c.fill();
-    c.fillStyle = '#8cb19e';
-    c.beginPath(); c.ellipse(x, y, radioX, radioY, -0.1, 0, Math.PI * 2); c.fill();
-    c.fillStyle = degradadoLineal(c, x - 160, y - 60, x + 130, y + 70, ['#1f758b', '#3aa6af', '#8bd6c9', '#166e81']);
-    c.beginPath(); c.ellipse(x, y, radioX - 13, radioY - 8, -0.1, 0, Math.PI * 2); c.fill();
-    for (let k = 0; k < 11; k++) {  // piedras de la orilla
-      const angulo = (k * Math.PI * 2) / 11;
-      ovaloDegradado(c, radioX * Math.cos(angulo) + x, (radioY - 2) * Math.sin(angulo) + y,
-        10 + azar(k) * 16, 7 + azar(k * 0.7) * 7, '#c4bb98', '#746f50');
-    }
-  });
-  for (let i = 0; i < 8; i++) {  // juncos
-    const jx = 68 + i * 14;
-    const jy = 500 + azar(i) * 17;
-    trazo([[jx, jy], [jx - 3, jy - 18 - azar(i) * 12]], '#4a834f', 2, g);
-    ovalo(jx - 4, jy - 23, 3, 8, '#8d9c59', null, g);
+  // Fachada del colegio
+  rectangulo(0, 62, ANCHO, 12, 0, '#b4553e', null, g);  // borde de teja
+  rectangulo(0, 74, ANCHO, 176, 0, '#f0dca6', null, g);
+  rectangulo(0, 205, ANCHO, 45, 0, '#4f8f6a', null, g);  // zócalo verde
+  for (const x of [384, 488]) {                          // ventanas
+    rectangulo(x, 96, 84, 74, 4, '#e8e2cf', '#8f8a7a', g);
+    rectangulo(x + 6, 102, 72, 62, 2, '#9fd0e6', null, g);
+    trazo([[x + 42, 102], [x + 42, 164]], '#e8e2cf', 4, g);
+    trazo([[x + 6, 133], [x + 78, 133]], '#e8e2cf', 4, g);
   }
+  // Jardinera con plantas
+  for (let i = 0; i < 7; i++) ovalo(392 + i * 30, 212, 17, 15, i % 2 ? '#4fa45c' : '#3d8a4c', null, g);
+  for (let i = 0; i < 5; i++) ovalo(404 + i * 40, 204, 4, 4, ['#ffd166', '#ff8fa3'][i % 2], null, g);
+  rectangulo(372, 218, 212, 32, 4, '#b4553e', '#8d3f2d', g);
+  // Piso del patio
+  conContexto(g, c => {
+    c.fillStyle = degradadoLineal(c, 0, 250, 0, ALTO, ['#d3d6cf', '#b8bcb5']);
+    c.fillRect(0, 250, ANCHO, ALTO - 250);
+    c.fillStyle = degradadoLineal(c, 0, 250, 0, 285, ['#3a3a3038', '#3a3a3000']);
+    c.fillRect(0, 250, ANCHO, 35);
+  });
+  g.stroke('#a9ada5');
+  g.strokeWeight(1.5);
+  for (let y = 310; y < ALTO; y += 70) g.line(0, y, ANCHO, y);
+  for (let x = -260; x <= ANCHO + 260; x += 130) g.line(x, 250, 520 + (x - 520) * 1.35, ALTO);
+  // Tienda escolar: estantes con mecato, toldo y mostrador
+  rectangulo(40, 92, 300, 158, 6, '#fbf8ef', '#c9c2ad', g);
+  const colores = ['#f2c230', '#d64545', '#3f8fd2', '#4caf68', '#ef8a3c'];
+  for (const fila of [116, 154]) {
+    for (let i = 0; i < 11; i++) rectangulo(62 + i * 24, fila, 18, 24, 3, colores[(i * 2 + fila) % 5], null, g);
+    rectangulo(56, fila + 24, 268, 5, 1, '#8f6440', null, g);
+  }
+  for (let i = 0; i < 10; i++) {                         // toldo a rayas
+    rectangulo(30 + i * 32, 84, 32, 22, 0, i % 2 ? '#f4f4f0' : '#d9443a', null, g);
+    ovalo(46 + i * 32, 106, 16, 7, i % 2 ? '#f4f4f0' : '#d9443a', null, g);
+  }
+  rectangulo(108, 58, 164, 28, 8, '#2f6b4f', '#ffffff', g);
+  escribir('TIENDA ESCOLAR', 190, 72, 13, '#ffffff', CENTER, g);
+  ovalo(190, 332, 165, 12, '#3a3a3030', null, g);
+  rectangulo(46, 254, 288, 74, 4, '#2f6b4f', '#244f3b', g);
+  rectangulo(36, 238, 308, 18, 4, '#c98a4b', '#93602f', g);
+  rectangulo(62, 268, 92, 48, 3, '#fdf6e3', null, g);  // tablero de precios
+  for (const y of [280, 292, 304]) trazo([[70, y], [146, y]], '#9a8f78', 2, g);
 }
 
-// Escenario 2 del documento: la zona de reciclaje (las canecas se dibujan aparte).
-function dibujarZonaDeReciclaje(g) {
+// Nivel 3: la cancha múltiple después del partido del descanso.
+function dibujarCancha(g) {
+  conContexto(g, c => {
+    c.fillStyle = degradadoLineal(c, 0, 0, 0, 210, ['#79b9d6', '#cbe8ee']);
+    c.fillRect(0, 0, ANCHO, 210);
+    // Árboles detrás de la malla
+    for (let i = 0; i < 9; i++) {
+      const x = 30 + i * 125 + azar(i) * 30;
+      c.fillStyle = '#6b5236';
+      c.fillRect(x - 5, 150, 10, 60);
+      ovaloDegradado(c, x, 140, 46 + azar(i * 2) * 14, 40, '#7bd08f', '#2f7a4f');
+    }
+  });
+  ovalo(330, 46, 22, 22, '#fff6c8', null, g);  // sol
+  // Muro bajo y malla
+  rectangulo(0, 205, ANCHO, 45, 0, '#d8d1bd', null, g);
+  g.stroke('#7d8a8588');
+  g.strokeWeight(1);
+  for (let x = -120; x < ANCHO; x += 16) {
+    g.line(x, 205, x + 110, 95);
+    g.line(x, 95, x + 110, 205);
+  }
+  for (let x = 10; x < ANCHO; x += 130) trazo([[x, 92], [x, 206]], '#5f6b66', 5, g);
+  trazo([[0, 95], [ANCHO, 95]], '#5f6b66', 4, g);
+  // Piso de la cancha con sus líneas
+  rectangulo(0, 245, ANCHO, ALTO - 245, 0, '#c4673f', null, g);
+  rectangulo(24, 260, ANCHO - 48, ALTO - 272, 0, '#3e8e74', null, g);
+  g.noFill();
+  g.stroke('#f2f5ef');
+  g.strokeWeight(3);
+  g.rect(40, 274, ANCHO - 80, ALTO - 300);
+  g.line(520, 274, 520, ALTO - 26);
+  g.ellipse(520, 416, 150, 100);
+  g.arc(40, 416, 240, 190, -HALF_PI, HALF_PI);
+  // Arco de microfútbol con su red
+  ovalo(86, 386, 60, 8, '#00000030', null, g);
+  g.stroke('#ffffff88');
+  g.strokeWeight(1);
+  for (let x = 44; x < 128; x += 10) g.line(x, 302, x, 382);
+  for (let y = 308; y < 382; y += 10) g.line(42, y, 128, y);
+  trazo([[38, 384], [38, 298], [130, 298], [130, 384]], '#ffffff', 6, g);
+  // Balón
+  ovalo(996, 534, 13, 13, '#ffffff', '#3a3a3a', g);
+  poligono([[996, 528], [1002, 533], [999, 540], [993, 540], [990, 533]], '#3a3a3a', null, g);
+}
+
+// Escenario 2 del documento: el punto ecológico del colegio (las canecas se dibujan aparte).
+function dibujarPuntoEcologico(g) {
   ovalo(839, 232, 214, 45, '#09271838', null, g);
   g.push();
   g.translate(622, 59);
@@ -976,7 +915,7 @@ function dibujarZonaDeReciclaje(g) {
     trazo([[px, 56], [px, 159]], '#457f66', 10, g);
     trazo([[px - 2, 65], [px - 2, 151]], '#8fbb9280', 3, g);
   }
-  escribir('♻  ZONA DE RECICLAJE', 203, 36, 15, '#f3fff0', CENTER, g);
+  escribir('♻  PUNTO ECOLÓGICO', 203, 36, 15, '#f3fff0', CENTER, g);
   g.pop();
 }
 
@@ -990,76 +929,50 @@ function dibujarCartelDelNivel(g, numero) {
   escribir(texto, 61, 37, 14, '#f1fff0', LEFT, g);
 }
 
-
 /* ===== 9. DIBUJO DE LO QUE SE MUEVE (cada cuadro) ===== */
 
 function dibujarEscena() {
   image(fondoNivel, 0, 0);
-  const limpieza = parqueRecuperado ? 1 : aciertos / TOTAL_RESIDUOS;  // de 0 (sucio) a 1 (limpio)
+  const limpieza = colegioRecuperado ? 1 : aciertos / TOTAL_RESIDUOS;  // de 0 (sucio) a 1 (limpio)
   dibujarSuciedad(limpieza);
-  if (parqueRecuperado) dibujarArcoiris();
-  dibujarFlores(limpieza);
-  if (nivel === 3) dibujarOndasDelLago();
-  dibujarVida(limpieza);
+  if (NIVELES[nivel - 1].exterior) dibujarVida(limpieza);
   dibujarCanecas();
   dibujarMarcaDestino();
   dibujarResiduosYJugador();
   dibujarAyudaCercana();
   dibujarParticulas();
-  if (parqueRecuperado) dibujarConfeti();
+  if (colegioRecuperado) dibujarConfeti();
 }
 
-// Escenario 1: al principio el parque se ve sucio y gris; se aclara con cada acierto.
+// Al principio el lugar se ve opaco y con papelitos en el piso; se aclara con cada acierto.
 function dibujarSuciedad(limpieza) {
-  if (limpieza >= 1) return;
-  noStroke();
-  fill(140, 140, 120, 50 * (1 - limpieza));
-  rect(0, 0, ANCHO, 212);
-  fill(125, 105, 65, 60 * (1 - limpieza));
-  rect(0, 212, ANCHO, ALTO - 212);
-}
-
-function dibujarFlores(limpieza) {
-  for (const flor of FLORES) {
-    if (flor.aparece > limpieza) continue;
-    if (nivel === 3 && estaEnElLago(flor.x, flor.y, 10)) continue;
+  if (limpieza < 1) {
+    noStroke();
+    fill(110, 95, 60, 55 * (1 - limpieza));
+    rect(0, 0, ANCHO, ALTO);
+  }
+  for (const p of PAPELITOS) {
+    if (p.seLimpia <= limpieza) continue;
     push();
-    translate(flor.x, flor.y);
-    scale(flor.escala);
-    trazo([[0, 6], [1, -7]], '#29744a', 1.4);
-    for (let k = 0; k < 6; k++) {
-      const angulo = (k * TWO_PI) / 6;
-      ovalo(cos(angulo) * 5, -10 + sin(angulo) * 5, 4, 3, flor.color);
-    }
-    ovalo(0, -10, 3.2, 3.2, '#f4d273');
+    translate(p.x, p.y);
+    rotate(p.giro);
+    rectangulo(-p.tamano, -p.tamano * 0.6, p.tamano * 2, p.tamano * 1.2, 1, p.color);
     pop();
   }
 }
 
-function dibujarOndasDelLago() {
-  noFill();
-  stroke('#d2fff072');
-  strokeWeight(1.5);
-  for (let i = 0; i < 13; i++) {
-    ellipse(90 + i * 19 + sin(reloj * 0.6 + i) * 6, 444 + (i % 4) * 14, 48, 6);
-  }
-}
-
-// Animales y aves: aparecen a medida que el parque se limpia.
+// Aves y mariposas en los lugares al aire libre; aparecen más a medida que se limpia.
 function dibujarVida(limpieza) {
-  dibujarPajaro(458 + ((reloj * 6) % 120), 86, 0.7);
-  dibujarPajaro(530 + ((reloj * 5) % 100), 107, 0.45);
-  if (limpieza > 0.5) dibujarPajaro(150 + ((reloj * 7) % 160), 125, 0.55);
+  if (colegioRecuperado) dibujarArcoiris();
+  dibujarPajaro(458 + ((reloj * 6) % 120), 30, 0.7);
+  dibujarPajaro(530 + ((reloj * 5) % 100), 46, 0.45);
   if (limpieza > 0.25) {
     dibujarMariposa(413 + sin(reloj * 0.45) * 24, 232, 0.57);
     dibujarMariposa(551 + sin(reloj * 0.6) * 21, 282, 0.42);
   }
-  if (nivel === 3 && (limpieza > 0.6 || parqueRecuperado)) dibujarPato();
-  if (parqueRecuperado) {
+  if (colegioRecuperado) {
     dibujarMariposa(250 + sin(reloj * 0.5) * 30, 300, 0.5);
     dibujarMariposa(760 + sin(reloj * 0.7) * 26, 470, 0.55);
-    dibujarConejo(300, 335, 1);
-    dibujarConejo(640, 525, -0.85);
   }
 }
 
@@ -1089,33 +1002,6 @@ function dibujarMariposa(x, y, escala) {
   ovalo(-5 * alas, 8, 7 * alas, 8, '#e3a69b');
   ovalo(5 * alas, 8, 7 * alas, 8, '#e3a69b');
   trazo([[0, -9], [0, 13]], '#4f7850', 2);
-  pop();
-}
-
-function dibujarPato() {
-  push();
-  translate(247 + sin(reloj * 0.8) * 17, 467 + cos(reloj * 0.7) * 4);
-  ovalo(0, 0, 23, 13, '#f6dc94');
-  ovalo(12, -14, 12, 13, '#fbe9b5');
-  ovalo(17, -16, 2.5, 2.5, '#273e32');
-  poligono([[23, -13], [35, -9], [22, -5]], '#f09c44');
-  pop();
-}
-
-function dibujarConejo(x, y, mira) {
-  const salto = abs(sin(reloj * 3 + x)) * 6;
-  push();
-  translate(x, y - salto);
-  scale(mira, 1);
-  ovalo(0, 0, 20, 14, '#e8d3b4');               // cuerpo
-  ovalo(-17, -2, 6, 6, '#fff7ea');             // cola
-  ovalo(14, -13, 11, 10, '#e8d3b4');           // cabeza
-  ovalo(10, -31, 4, 12, '#e8d3b4');            // orejas
-  ovalo(17, -31, 4, 12, '#e8d3b4');
-  ovalo(10, -31, 2, 8, '#efb1ad');
-  ovalo(17, -31, 2, 8, '#efb1ad');
-  ovalo(18, -15, 1.8, 2.2, '#3a4a36');         // ojo
-  ovalo(24, -11, 2, 1.6, '#ae6e69');           // nariz
   pop();
 }
 
@@ -1152,16 +1038,17 @@ function dibujarCaneca(caneca, iluminada) {
 }
 
 function dibujarSimboloCaneca(caneca) {
-  if (caneca.tipo === 'papel') {
-    rectangulo(-11, -15, 22, 28, 2, '#eaf4ff', caneca.oscuro);
-    for (const y of [-7, -1, 5]) trazo([[-6, y], [6, y]], caneca.oscuro, 2);
-  } else if (caneca.tipo === 'plastico') {
-    rectangulo(-5, -17, 10, 6, 2, caneca.oscuro);
-    rectangulo(-9, -12, 18, 26, 6, '#ffe7a8', caneca.oscuro);
-  } else {
+  if (caneca.tipo === 'aprovechable') {
+    escribir('♻', 0, 1, 30, '#4f6f66');
+  } else if (caneca.tipo === 'organico') {
     ovalo(-4, 1, 12, 8, '#468a55');
     ovalo(7, -6, 11, 7, '#6daf6a');
     trazo([[-6, 10], [8, -8]], caneca.oscuro, 3);
+  } else {
+    // Bolsa de basura
+    ovalo(0, 5, 13, 12, '#3a4248');
+    poligono([[-6, -6], [0, -15], [6, -6]], '#3a4248');
+    trazo([[-4, -9], [4, -9]], '#9aa3a8', 2);
   }
 }
 
@@ -1225,73 +1112,47 @@ function dibujarResiduo(r, resaltado) {
 // Dibuja cada residuo alrededor del punto (0, 0).
 function dibujarArteResiduo(dibujo) {
   switch (dibujo) {
-    // ----- Papel -----
+    // ----- Caneca blanca: aprovechables limpios y secos -----
     case 'hoja':
       poligono([[-15, -15], [7, -19], [19, -6], [14, 17], [-16, 13]], '#fffdf2', '#7c9e9d');
       trazo([[-9, -5], [6, -7]], '#a5c6ce', 2);
       trazo([[-9, 2], [10, 1]], '#a5c6ce', 2);
       trazo([[-8, 9], [6, 9]], '#a5c6ce', 2);
       break;
-    case 'periodico':
-      rectangulo(-21, -15, 42, 30, 2, '#ece8dc', '#7f7c70');
-      rectangulo(-17, -11, 34, 6, 1, '#59606b');
-      rectangulo(-17, -2, 13, 12, 1, '#b9c2c9');
-      for (const y of [-1, 4, 9]) trazo([[0, y], [17, y]], '#9a978c', 2);
+    case 'fotocopias':
+      rectangulo(-14, -18, 30, 36, 1, '#eeeeea', '#9aa3a8');
+      rectangulo(-18, -14, 30, 36, 1, '#ffffff', '#7f8a90');
+      for (const y of [-7, -2, 3, 8, 13]) trazo([[-13, y], [7, y]], '#6f7a80', 1.5);
+      ovalo(-15, -11, 2, 2, '#9aa3a8');  // gancho de cosedora
+      break;
+    case 'botella':
+      rectangulo(-8, -25, 16, 9, 2, '#62b4da', '#367994');
+      rectangulo(-11, -17, 22, 37, 7, '#a8e5ec', '#4298b0');
+      rectangulo(-9, -1, 18, 10, 2, '#ffffffb7');
+      break;
+    case 'lata':
+      rectangulo(-11, -18, 22, 36, 5, '#d64545', '#8f2a2a');
+      rectangulo(-11, -4, 22, 8, 0, '#f2f2f2');
+      ovalo(0, -18, 11, 4, '#c9cfd4', '#8a9298');
+      ovalo(-4, -18, 3, 1.5, '#6f777d');
+      break;
+    case 'cajaJugo':
+      rectangulo(-12, -16, 24, 32, 3, '#ffd166', '#c9962a');
+      rectangulo(-12, -16, 24, 7, 2, '#f4f4f4');
+      ovalo(-2, 3, 7, 7, '#ef8a3c');
+      trazo([[6, -16], [10, -28]], '#ffffff', 3);  // pitillo
+      break;
+    case 'bebida':
+      rectangulo(-8, -25, 16, 9, 2, '#2c7be5', '#1b4f99');
+      rectangulo(-11, -17, 22, 37, 7, '#7fd3f7', '#2a8cc0');
+      rectangulo(-11, -4, 22, 12, 2, '#f25c54');
       break;
     case 'caja':
       rectangulo(-20, -13, 40, 27, 3, '#c99460', '#a87442');
       trazo([[0, -13], [0, 14]], '#a87442', 2);
       trazo([[-20, -4], [0, 0], [20, -4]], '#e3b682', 2);
       break;
-    case 'sobre':
-      rectangulo(-21, -13, 42, 27, 3, '#fdf7e6', '#b49f7a');
-      trazo([[-20, -12], [0, 3], [20, -12]], '#b49f7a', 2);
-      rectangulo(9, -9, 8, 9, 1, '#e57d6d');  // estampilla
-      break;
-    case 'cartonHuevos':
-      rectangulo(-23, -4, 46, 17, 4, '#c9b597', '#8f7d60');
-      for (const x of [-15, -5, 5, 15]) ovalo(x, -5, 5.5, 6, '#d9c8aa', '#8f7d60');
-      break;
-    case 'tubo':
-      rectangulo(-9, -18, 18, 36, 3, '#c99a64', '#8d6439');
-      trazo([[-9, -6], [9, -12]], '#a87a48', 2);
-      trazo([[-9, 6], [9, 0]], '#a87a48', 2);
-      ovalo(0, -18, 9, 4, '#7a5532');
-      break;
-    // ----- Plástico -----
-    case 'botella':
-      rectangulo(-8, -25, 16, 9, 2, '#62b4da', '#367994');
-      rectangulo(-11, -17, 22, 37, 7, '#a8e5ec', '#4298b0');
-      rectangulo(-9, -1, 18, 10, 2, '#ffffffb7');
-      break;
-    case 'vaso':
-      poligono([[-15, -13], [15, -13], [11, 20], [-11, 20]], '#aee1e8', '#397c92');
-      rectangulo(-18, -17, 36, 6, 3, '#ffffff', '#397c92');
-      trazo([[2, -17], [10, -29]], '#f07f8f', 3);  // pitillo
-      break;
-    case 'bolsa':
-      poligono([[-18, -11], [-7, -18], [7, -18], [18, -11], [15, 19], [-15, 19]], '#e8e8f7d0', '#7f9ec0');
-      noFill();
-      stroke('#7f9ec0');
-      strokeWeight(2);
-      arc(0, -17, 16, 16, PI, TWO_PI);  // asa
-      break;
-    case 'cuchara':
-      trazo([[-2, 2], [22, -8]], '#9fb3c8', 7);
-      trazo([[-2, 2], [22, -8]], '#ffffff', 4);
-      ovalo(-10, 5, 11, 7, '#ffffff', '#9fb3c8');
-      break;
-    case 'tapa':
-      ovalo(0, 6, 13, 5, '#245f94');
-      rectangulo(-13, -6, 26, 12, 3, '#3d95dc', '#245f94');
-      for (const x of [-8, -3, 2, 7]) trazo([[x, -4], [x, 4]], '#2a74b4', 2);
-      break;
-    case 'yogur':
-      poligono([[-13, -14], [13, -14], [10, 18], [-10, 18]], '#fdfdfd', '#9fb3c8');
-      rectangulo(-12, -3, 24, 9, 2, '#f48fb1');
-      ovalo(0, -14, 14, 4, '#d9e4ee', '#9fb3c8');
-      break;
-    // ----- Orgánicos -----
+    // ----- Caneca verde: orgánicos -----
     case 'banano':
       fill('#f9d25b');
       stroke('#bb8b34');
@@ -1304,13 +1165,6 @@ function dibujarArteResiduo(dibujo) {
       endShape(CLOSE);
       ovalo(22, -12, 3, 3, '#7e6b42');
       break;
-    case 'manzana':
-      ovalo(0, -11, 11, 6, '#de7464', '#a94845');
-      rectangulo(-6, -9, 12, 18, 5, '#fbefc9', '#d8c79a');
-      ovalo(0, 11, 11, 6, '#de7464', '#a94845');
-      rectangulo(-1.5, -22, 3, 7, 1, '#7d6e3b');
-      ovalo(5, -20, 6, 3, '#68ad69');
-      break;
     case 'naranja':
       fill('#f9ac4c');
       stroke('#cc7929');
@@ -1319,38 +1173,63 @@ function dibujarArteResiduo(dibujo) {
       ovalo(0, 0, 12, 12, '#ffe09e');
       ovalo(3, 0, 4, 4, '#fff4bf');
       break;
-    case 'pan':
-      ovalo(0, 2, 21, 12, '#d39a55', '#9c6a33');
-      ovalo(-2, -1, 14, 7, '#f5dcae');
-      for (const x of [-8, 0, 8]) ovalo(x, -4, 1.5, 1, '#c08a4a');
-      break;
-    case 'huevo':
-      fill('#fbf3e4');
-      stroke('#c9b79c');
-      strokeWeight(2);
-      arc(-9, 0, 24, 30, 0, PI, CHORD);
+    case 'mandarina':
       push();
-      translate(10, 4);
-      rotate(0.6);
-      arc(0, 0, 20, 24, 0, PI, CHORD);
+      scale(0.8);
+      dibujarArteResiduo('naranja');
       pop();
-      trazo([[-21, 0], [-16, -4], [-11, 0], [-6, -4], [3, 0]], '#c9b79c', 2);
+      ovalo(-12, -12, 5, 3, '#5aa05c');  // hojita
       break;
-    case 'hojas':
-      dibujarHojaSeca(-8, 2, -0.5, '#c98a3a');
-      dibujarHojaSeca(8, -3, 0.6, '#a8642a');
-      dibujarHojaSeca(2, 9, 0.1, '#d9a441');
+    case 'manzana':
+      ovalo(0, -11, 11, 6, '#de7464', '#a94845');
+      rectangulo(-6, -9, 12, 18, 5, '#fbefc9', '#d8c79a');
+      ovalo(0, 11, 11, 6, '#de7464', '#a94845');
+      rectangulo(-1.5, -22, 3, 7, 1, '#7d6e3b');
+      ovalo(5, -20, 6, 3, '#68ad69');
+      break;
+    case 'arroz':
+      ovalo(0, 8, 20, 6, '#00000018');
+      for (let i = 0; i < 26; i++) ovalo(-14 + azar(i) * 28, -2 + azar(i * 3) * 11 - abs(azar(i) - 0.5) * 8, 2.6, 1.3, i % 4 ? '#fbf8ee' : '#e8dfc4');
+      break;
+    // ----- Caneca negra: no aprovechables (sucios, mojados o metalizados) -----
+    case 'panuelo':
+      poligono([[-16, -8], [-6, -16], [8, -12], [17, -2], [12, 12], [-4, 15], [-15, 8]], '#f7f7f4', '#b9bdb8');
+      trazo([[-8, -6], [2, 0], [-2, 8]], '#d6d9d4', 2);
+      trazo([[6, -6], [10, 4]], '#d6d9d4', 2);
+      break;
+    case 'paquetePapas':
+      poligono([[-14, -20], [14, -20], [16, 18], [-16, 18]], '#f2c230', '#b38a12');
+      rectangulo(-16, -22, 32, 5, 1, '#c9ced3');  // bordes metalizados
+      rectangulo(-16, 16, 32, 5, 1, '#c9ced3');
+      ovalo(0, 1, 9, 7, '#e8a23a');
+      trazo([[-10, -12], [-4, -6]], '#ffffffaa', 3);  // brillo
+      break;
+    case 'chocolatina':
+      poligono([[-20, -8], [-27, -13], [-27, 13], [-20, 8]], '#d4b13a');
+      poligono([[20, -8], [27, -13], [27, 13], [20, 8]], '#d4b13a');
+      rectangulo(-20, -8, 40, 16, 2, '#6b3e26', '#3f2416');
+      trazo([[-12, -3], [8, -3]], '#f0d27a', 2);
+      break;
+    case 'servilletaGrasa':
+      poligono([[-21, -13], [-4, -18], [15, -13], [23, 10], [3, 17], [-18, 11]], '#f2eee4', '#b8ad97');
+      ovalo(-3, -1, 10, 6, '#c9a26a99');
+      ovalo(9, 7, 6, 4, '#b8894f88');
+      break;
+    case 'cajaPizza':
+      rectangulo(-24, -14, 48, 30, 3, '#d3a46b', '#93683b');
+      ovalo(-9, 2, 9, 6, '#a8733699');
+      ovalo(10, -5, 7, 5, '#a8733688');
+      poligono([[4, 6], [19, 2], [14, 14]], '#f2c14e', '#c98a2a');  // pedazo de pizza
+      break;
+    case 'periodicoMojado':
+      rectangulo(-21, -15, 42, 30, 2, '#dcd8cc', '#7f7c70');
+      rectangulo(-17, -11, 34, 6, 1, '#59606b');
+      for (const y of [-1, 4, 9]) trazo([[-17, y], [17, y]], '#9a978c', 2);
+      ovalo(-7, 3, 10, 7, '#7fb2d988');  // manchas de agua
+      ovalo(10, -3, 6, 5, '#7fb2d988');
+      trazo([[-7, 10], [-7, 18]], '#7fb2d9', 2);
       break;
   }
-}
-
-function dibujarHojaSeca(x, y, angulo, color) {
-  push();
-  translate(x, y);
-  rotate(angulo);
-  ovalo(0, 0, 13, 6, color, '#7a4a1f');
-  trazo([[-12, 0], [12, 0]], '#7a4a1f', 1.5);
-  pop();
 }
 
 // El personaje elegido. Usa los colores de su ropa (PERSONAJES) y, si tiene foto, su cara.
@@ -1538,10 +1417,15 @@ function sonidosDeAmbiente(dt) {
     sonar(95, 0.08, 'triangle', 0.012);
   }
   esperaPajaro += dt;
-  if (esperaPajaro > 6.5) {
+  if (esperaPajaro > 6.5 && NIVELES[nivel - 1].exterior) {
     esperaPajaro = 0;
     sonar(1050, 0.24, 'sine', 0.018, 1600);
   }
+}
+
+// El timbre del colegio: suena cuando se acaba el tiempo.
+function sonarTimbre() {
+  for (let i = 0; i < 6; i++) setTimeout(() => sonar(i % 2 ? 660 : 880, 0.14, 'square', 0.03), i * 150);
 }
 
 function alternarSonido() {
@@ -1584,7 +1468,7 @@ function conectarControles() {
   // Teclado
   document.addEventListener('keydown', alPresionarTecla);
 
-  // Ratón o dedo sobre el parque
+  // Ratón o dedo sobre el escenario
   lienzo.elt.addEventListener('pointerdown', alTocarLienzo);
   lienzo.elt.addEventListener('pointermove', alMoverPuntero);
   lienzo.elt.addEventListener('pointerleave', () => { residuoSenalado = null; });
@@ -1635,7 +1519,7 @@ function alPresionarTecla(evento) {
   }
 }
 
-// Convierte la posición del clic en la pantalla a coordenadas del parque (1040 × 585).
+// Convierte la posición del clic en la pantalla a coordenadas del escenario (1040 × 585).
 function posicionEnLienzo(evento) {
   const borde = lienzo.elt.getBoundingClientRect();
   return {
@@ -1644,7 +1528,7 @@ function posicionEnLienzo(evento) {
   };
 }
 
-// Al tocar el parque: si es un residuo, el personaje va a recogerlo; si es una caneca, va a depositar;
+// Al tocar el escenario: si es un residuo, el personaje va a recogerlo; si es una caneca, va a depositar;
 // si es el suelo, camina hasta allí.
 function alTocarLienzo(evento) {
   if (estado !== 'jugando') return;
@@ -1711,10 +1595,6 @@ function azar(semilla) {
 function formatoTiempo(segundos) {
   const total = Math.ceil(segundos);
   return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
-}
-
-function estaEnElLago(x, y, margen = 0) {
-  return ((x - LAGO.x) / (LAGO.radioX + margen)) ** 2 + ((y - LAGO.y) / (LAGO.radioY + margen)) ** 2 < 1;
 }
 
 function ovalo(x, y, radioX, radioY, relleno, borde = null, g = pantalla) {
@@ -1805,7 +1685,7 @@ function ovaloDegradado(c, x, y, radioX, radioY, claro, oscuro) {
 // Solo lectura: permite revisar el estado del juego desde la consola del navegador (F12).
 window.GuardianesDelPlaneta = Object.freeze({
   estado: () => ({
-    estado, nivel, puntos, tiempo, aciertos, errores, metaAlcanzada, parqueRecuperado,
+    estado, nivel, puntos, tiempo, aciertos, errores, metaAlcanzada, colegioRecuperado,
     jugadorX, jugadorY, racha,
     personaje: personajeElegido,
     pregunta: preguntaActual ? preguntaActual.tipo : null,

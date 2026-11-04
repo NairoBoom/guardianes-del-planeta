@@ -35,6 +35,31 @@ Las constantes de los extras están al principio de `game.js` (`RACHA_PARA_BONO`
 
 **Fotos de los personajes:** el juego solo usa los recortes livianos de `assets/personajes/`, no las fotos originales. Si el juego se publica en internet, primero hay que pedir permiso a Cristian y a Juan.
 
+## Ajuste después de la revisión del profesor (4 de noviembre de 2026)
+
+**Observación del profesor:** el juego era genérico. Revisando la guía vimos por qué: el ejemplo de objetivo educativo de la página 7 es "clasificar residuos y tomar decisiones de reciclaje", y nuestro juego era casi ese ejemplo, en un parque cualquiera. La Misión 1 pide partir de un problema real, de la comunidad o de la vida cotidiana.
+
+**Decisión del equipo:** la IA nos propuso cuatro enfoques (nuestro colegio, la ruta del residuo, colegio + ruta, reciclador de oficio). **Elegimos ubicar el juego en nuestro colegio**, porque es un problema que vemos todos los días en el descanso y lo podemos investigar y observar directamente.
+
+| Componente | Antes (genérico) | Ahora (nuestro colegio) | ¿Funcionó? |
+|---|---|---|---|
+| Problema | Basura en "un parque" | La basura del descanso en la I.E. Ángela María Torres Suárez está mal separada | Sí |
+| Escenarios | Sendero, picnic y lago | **Salón** (después de clase), **tienda escolar** (descanso) y **cancha** (después del partido) | Sí |
+| Canecas | Papel, plástico y orgánicos (genéricas) | **Blanca, verde y negra**: el código de colores de Colombia (Resolución 2184 de 2019), el mismo del punto ecológico | Sí |
+| Residuos | Genéricos | Basura real del colegio: fotocopias, paquete de papas, caja de jugo, servilleta con grasa, cáscaras de naranja del medio tiempo… | Sí |
+| Aprendizaje | Solo "dónde va" cada cosa | **Por qué** va ahí: lo limpio y seco va en la blanca; lo sucio, mojado o metalizado va en la negra. El nivel difícil tiene parejas que confunden (caja de cartón limpia y caja de pizza con grasa) | Sí |
+| Retroalimentación | "Es un residuo de papel" | Al equivocarse, el juego explica la razón ("Los empaques metalizados no se aprovechan: van en la negra") | Sí |
+| Historia | Limpiar un parque | Semana ambiental: limpiar el colegio antes de que suene el timbre | Sí |
+| Ambiente | Flores y animales | Papelitos en el piso que desaparecen al limpiar, timbre al acabarse el tiempo y celebración con el colegio limpio | Sí |
+
+**Pendiente del equipo:** actualizar en la Entrega 1 (GDD) el problema, los escenarios, la historia y las canecas para que coincidan con el juego. También pueden tomar fotos del punto ecológico real del colegio para comparar.
+
+## Bitácora de IA
+
+| Fecha | Necesidad | Prompt (resumen) | Respuesta utilizada | Decisión del equipo |
+|---|---|---|---|---|
+| 4-nov-2026 | El profesor dijo que el juego era genérico | Le dimos a la IA la guía del proyecto y le pedimos ajustar el juego | Cuatro enfoques posibles para que el juego fuera propio | Elegimos "nuestro colegio" y revisamos que los residuos y las canecas siguieran la norma colombiana |
+
 ## Cómo revisar el juego
 
 - Abre `index.html` en Chrome, Edge o Firefox. No necesita internet.

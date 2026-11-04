@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#092b2b">
-  <meta name="description" content="Guardianes del Planeta: videojuego educativo 2D sobre reciclaje. Proyecto STEAM de grado 11.">
-  <title>Guardianes del Planeta · Juego de reciclaje</title>
+  <meta name="description" content="Guardianes del Planeta: videojuego educativo 2D sobre la separación de residuos en nuestro colegio. Proyecto STEAM de grado 11.">
+  <title>Guardianes del Planeta · Misión colegio limpio</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -23,9 +23,9 @@
     <main id="inicio">
       <div class="intro">
         <div>
-          <div class="antetitulo"><span>✳</span> VIDEOJUEGO EDUCATIVO 2D · AVENTURA Y CLASIFICACIÓN</div>
-          <h1>El parque está <span>lleno de basura.</span></h1>
-          <p>Elige a tu guardián, recoge los residuos y deposítalos en la caneca correcta: papel, plástico u orgánicos. ¡Limpia el parque y aprende a reciclar mientras juegas!</p>
+          <div class="antetitulo"><span>✳</span> SEMANA AMBIENTAL · I.E. ÁNGELA MARÍA TORRES SUÁREZ</div>
+          <h1>El colegio está <span>lleno de basura.</span></h1>
+          <p>Después del descanso, el salón, la tienda escolar y la cancha quedaron llenos de basura mal separada. Elige a tu guardián y lleva cada residuo a la caneca correcta del punto ecológico antes de que suene el timbre.</p>
         </div>
         <div class="insignia" aria-hidden="true"><span>🌎</span><small>¡SÉ EL<br>CAMBIO!</small></div>
       </div>
@@ -56,8 +56,8 @@
               <div class="pictograma" aria-hidden="true">🌱</div>
               <div class="pildora">MISIÓN ECOLÓGICA</div>
               <h2>Guardianes del Planeta</h2>
-              <p>El parque está lleno de basura. Elige a tu guardián, recoge los residuos, llévalos a la zona de reciclaje y deposita cada uno en la caneca correcta.</p>
-              <div class="resaltados"><span>⏳ 60 segundos</span><span>🎯 100 puntos</span><span>🏅 3 niveles</span></div>
+              <p>Es la semana ambiental y el colegio quedó lleno de basura mal separada. Elige a tu guardián y lleva cada residuo a la caneca blanca, verde o negra del punto ecológico antes de que suene el timbre.</p>
+              <div class="resaltados"><span>🔔 60 segundos</span><span>🎯 100 puntos</span><span>🏫 3 lugares</span></div>
               <p class="record oculta" id="textoRecord"></p>
               <!-- Si el archivo se abre en una vista previa (WhatsApp, Correo, Archivos del iPhone),
                    JavaScript no se ejecuta: se oculta el botón y se explica cómo abrirlo. -->
@@ -84,13 +84,13 @@
               <div class="pasos">
                 <div><span class="paso-numero">01</span><div><strong>Muévete por el parque</strong><p>Usa las <b>flechas</b> o <b>W A S D</b>. También puedes hacer clic o tocar el suelo.</p></div></div>
                 <div><span class="paso-numero">02</span><div><strong>Recoge un residuo</strong><p>Acércate y presiona <b>E</b> o <b>espacio</b>, o toca el residuo.</p></div></div>
-                <div><span class="paso-numero">03</span><div><strong>Clasifícalo</strong><p>Llévalo a la zona de reciclaje y deposítalo en la caneca de <b>papel</b>, <b>plástico</b> u <b>orgánicos</b>.</p></div></div>
+                <div><span class="paso-numero">03</span><div><strong>Clasifícalo</strong><p>Llévalo al punto ecológico y deposítalo en la caneca <b>blanca</b> (aprovechables), <b>verde</b> (orgánicos) o <b>negra</b> (no aprovechables).</p></div></div>
               </div>
               <ol class="reglas">
                 <li>Empiezas con <b>0 puntos</b>.</li>
                 <li>Cada residuo bien clasificado: <b>+10 puntos</b>.</li>
                 <li>Cada residuo mal clasificado: <b>−5 puntos</b>.</li>
-                <li>Tienes <b>60 segundos</b> para los 3 niveles: fácil, intermedio y difícil.</li>
+                <li>Tienes <b>60 segundos</b>, hasta que suene el timbre, para limpiar el salón (fácil), la tienda escolar (intermedio) y la cancha (difícil).</li>
                 <li>Ganas si alcanzas <b>100 puntos</b> antes de que termine el tiempo. ¡Limpia todo el parque para ganar la medalla de oro!</li>
               </ol>
               <div class="extras">
@@ -110,16 +110,16 @@
             <section class="tarjeta oculta" id="pantallaNivel">
               <div class="pictograma" aria-hidden="true">🌿</div>
               <div class="pildora">¡ZONA LIMPIA!</div>
-              <h2 id="tituloNivel">¡El sendero quedó impecable!</h2>
+              <h2 id="tituloNivel">¡El salón quedó impecable!</h2>
               <p id="textoNivel"></p>
               <div class="resaltados"><span>⭐ <b id="puntosNivel">0</b> puntos</span><span>⏱ <b id="tiempoNivel">00:00</b> restantes</span></div>
               <div class="pregunta">
                 <p class="pregunta-titulo">⚡ PREGUNTA RÁPIDA · +5 SEGUNDOS</p>
                 <p class="pregunta-texto">¿En qué caneca va <b id="preguntaResiduo"></b>?</p>
                 <div class="opciones">
-                  <button type="button" class="opcion opcion-papel" data-respuesta="papel">📄 Papel</button>
-                  <button type="button" class="opcion opcion-plastico" data-respuesta="plastico">🧴 Plástico</button>
-                  <button type="button" class="opcion opcion-organico" data-respuesta="organico">🍌 Orgánicos</button>
+                  <button type="button" class="opcion opcion-blanca" data-respuesta="aprovechable">Blanca</button>
+                  <button type="button" class="opcion opcion-verde" data-respuesta="organico">Verde</button>
+                  <button type="button" class="opcion opcion-negra" data-respuesta="noAprovechable">Negra</button>
                 </div>
                 <p class="pregunta-resultado" id="preguntaResultado" aria-live="polite"></p>
               </div>
@@ -184,13 +184,13 @@
       <!-- ===== GUÍA Y CONTROLES ===== -->
       <div class="tarjetas">
         <section class="guia" aria-label="Guía rápida de reciclaje">
-          <div class="guia-titulo"><span aria-hidden="true">✳</span><div><h3>¿A dónde va cada residuo?</h3><p>Deposita cada residuo en su caneca de la zona de reciclaje.</p></div></div>
+          <div class="guia-titulo"><span aria-hidden="true">✳</span><div><h3>¿A dónde va cada residuo?</h3><p>Código de colores de Colombia para separar en la fuente (Resolución 2184 de 2019).</p></div></div>
           <div class="canecas-guia">
-            <div><span class="mini-caneca caneca-papel" aria-hidden="true">📄</span><b>Papel</b><small>Hojas, periódico, sobres y cartón</small></div>
-            <div><span class="mini-caneca caneca-plastico" aria-hidden="true">🧴</span><b>Plástico</b><small>Botellas, vasos, bolsas y tapas</small></div>
-            <div><span class="mini-caneca caneca-organico" aria-hidden="true">🍌</span><b>Orgánicos</b><small>Cáscaras, restos de comida y hojas secas</small></div>
+            <div><span class="mini-caneca caneca-blanca" aria-hidden="true">♻</span><b>Blanca</b><small>Aprovechables limpios y secos: papel, cartón, plástico, latas, vidrio y cajas de jugo</small></div>
+            <div><span class="mini-caneca caneca-verde" aria-hidden="true">🍌</span><b>Verde</b><small>Orgánicos: cáscaras, restos de fruta y de comida</small></div>
+            <div><span class="mini-caneca caneca-negra" aria-hidden="true">🗑</span><b>Negra</b><small>No aprovechables: servilletas, pañuelos, empaques metalizados, papel sucio o mojado</small></div>
           </div>
-          <p class="dato-colombia">📌 <b>Dato:</b> en Colombia, desde 2021, el código nacional de colores usa la caneca <b>blanca</b> para aprovechables (papel, cartón, plástico, vidrio y metal), la <b>verde</b> para orgánicos y la <b>negra</b> para no aprovechables.</p>
+          <p class="dato-colombia">💡 <b>Regla rápida:</b> si está <b>limpio y seco</b>, casi siempre va en la blanca. Si está <b>sucio, mojado o es metalizado</b> (paquete de papas, envolturas brillantes), va en la negra. El mismo cartón puede ir en la blanca o en la negra según cómo esté.</p>
         </section>
 
         <section class="controles" aria-label="Controles del juego">
