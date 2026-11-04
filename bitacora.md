@@ -52,6 +52,19 @@ Las constantes de los extras están al principio de `game.js` (`RACHA_PARA_BONO`
 | Historia | Limpiar un parque | Semana ambiental: limpiar el colegio antes de que suene el timbre | Sí |
 | Ambiente | Flores y animales | Papelitos en el piso que desaparecen al limpiar, timbre al acabarse el tiempo y celebración con el colegio limpio | Sí |
 
+### Mejora visual: que se vea más real (seguimos con p5.js)
+
+Consideramos pasar a Three.js (3D), pero decidimos **mantener p5.js**: ya estaba en el documento y el código es más fácil de explicar en la sustentación. Mejoramos el dibujo con técnicas de arte y matemáticas:
+
+| Técnica | Cómo la usamos | ¿Funcionó? |
+|---|---|---|
+| Perspectiva con punto de fuga | El piso del salón, el patio y la cancha tienen líneas que se juntan hacia un punto lejano (función `xEnPerspectiva`). Las filas de baldosas crecen 14 % cada vez que se acercan. | Sí |
+| Escala por profundidad | El personaje y los residuos se ven más pequeños al fondo y más grandes adelante (`escalaPorProfundidad`). | Sí |
+| Luz y sombras | Sombras difuminadas con degradado radial, luz de ventana en el piso, sombra donde la pared toca el piso y viñeta en los bordes. | Sí |
+| Volumen | Degradados de luz a sombra en canecas (con tapa, pedal y etiqueta), botellas transparentes con reflejo, latas metálicas y cajas en 3D. | Sí |
+| Texturas | Pintura de pared, cemento, corcho, polvo de tiza, ladrillo y tejado de barro, hechos con puntitos y manchas. | Sí |
+| Más detalle en los escenarios | Cartelera con avisos y bandera, pupitres, nevera con bebidas, ventanas con reja, gradería y montañas al fondo. | Sí |
+
 **Pendiente del equipo:** actualizar en la Entrega 1 (GDD) el problema, los escenarios, la historia y las canecas para que coincidan con el juego. También pueden tomar fotos del punto ecológico real del colegio para comparar.
 
 ## Bitácora de IA

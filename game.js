@@ -59,7 +59,7 @@ const NIVELES = [
   {
     nombre: 'Fácil', zona: 'El salón', momento: 'después de clase', cantidad: 4, exterior: false,
     canecaIlumina: true, nombresVisibles: true, viento: false,
-    ocupado: [[56, 220, 308, 90]],
+    ocupado: [[30, 230, 320, 92], [20, 480, 160, 105], [870, 480, 170, 105]],  // escritorio y pupitres
     tituloLimpio: '¡El salón quedó impecable!',
     textoLimpio: 'Sonó la campana del descanso… y la tienda escolar se llenó de empaques.'
   },
@@ -82,9 +82,9 @@ const TOTAL_RESIDUOS = NIVELES.reduce((suma, n) => suma + n.cantidad, 0);  // 15
 
 // Canecas del punto ecológico con el código de colores de Colombia (Resolución 2184 de 2019).
 const CANECAS = [
-  { tipo: 'aprovechable',   nombre: 'BLANCA', x: 696, color: '#f1f4f0', oscuro: '#9aa8a2' },
-  { tipo: 'organico',       nombre: 'VERDE',  x: 825, color: '#4caf68', oscuro: '#2a7643' },
-  { tipo: 'noAprovechable', nombre: 'NEGRA',  x: 954, color: '#3d464c', oscuro: '#1f262b' }
+  { tipo: 'aprovechable',   nombre: 'BLANCA', x: 696, claro: '#ffffff', color: '#e4e8e5', oscuro: '#a2ada8' },
+  { tipo: 'organico',       nombre: 'VERDE',  x: 825, claro: '#72d494', color: '#2f9e55', oscuro: '#1b6536' },
+  { tipo: 'noAprovechable', nombre: 'NEGRA',  x: 954, claro: '#6a737a', color: '#30373c', oscuro: '#15191c' }
 ];
 
 // Cada residuo tiene: nombre, tipo (su caneca), dibujo, nivel en el que aparece
@@ -737,8 +737,9 @@ function cerrarInstrucciones() {
 /* ===== 8. DIBUJO DEL ESCENARIO =====
    Cada nivel es un lugar del colegio. Se dibuja una sola vez por nivel en una imagen aparte
    (createGraphics), así el juego no redibuja miles de detalles 60 veces por segundo.
-   Las funciones con "c" usan el canvas normal de JavaScript (drawingContext),
-   porque p5.js no trae degradados de color. */
+   Para que se vea más real usamos perspectiva (el piso se junta hacia el fondo), texturas,
+   luz y sombras suaves. Las funciones con "c" usan el canvas normal de JavaScript
+   (drawingContext), porque p5.js no trae degradados de color. */
 
 function crearFondo(numero) {
   const g = createGraphics(ANCHO, ALTO);
@@ -753,169 +754,345 @@ function crearFondo(numero) {
 
 // Nivel 1: el salón de clase después de la última hora.
 function dibujarSalon(g) {
-  // Pared y zócalo
+  g.background('#d8d0bf');
+  // Pared pintada con textura y zócalo
   conContexto(g, c => {
-    c.fillStyle = degradadoLineal(c, 0, 0, 0, 250, ['#f3ead2', '#e4d8b8']);
-    c.fillRect(0, 0, ANCHO, 250);
+    c.fillStyle = degradadoLineal(c, 0, 0, 0, PISO_Y, ['#f1e8cf', '#ded1af']);
+    c.fillRect(0, 0, ANCHO, PISO_Y);
+    c.fillStyle = degradadoLineal(c, 0, 202, 0, PISO_Y, ['#86b59b', '#699880']);
+    c.fillRect(0, 202, ANCHO, PISO_Y - 202);
   });
-  rectangulo(0, 200, ANCHO, 50, 0, '#8fb9a0', null, g);
-  rectangulo(0, 198, ANCHO, 5, 0, '#6e9c83', null, g);
-  // Piso de baldosa
-  g.noStroke();
-  for (let fila = 0; fila < 7; fila++) {
-    for (let col = 0; col < 15; col++) {
-      g.fill((fila + col) % 2 ? '#d9d2c3' : '#cec6b4');
-      g.rect(col * 80 - (fila % 2) * 40, 250 + fila * 50, 80, 50);
-    }
+  textura(g, 0, 0, ANCHO, 200, 2600, '#ffffff22', '#7a6a4a14', 1);
+  manchas(g, 0, 0, ANCHO, 190, 12, '#b9a77a12', 2);
+  rectangulo(0, 198, ANCHO, 6, 0, '#5c8a72', null, g);
+  // Piso de baldosa en perspectiva, con la luz que entra por las ventanas
+  dibujarPisoDeBaldosas(g, 70, ['#ddd5c4', '#cdc4b0'], '#b1a893');
+  luzEnElPiso(g, [[40, PISO_Y], [210, PISO_Y], [420, ALTO], [110, ALTO]], 0.16);
+  luzEnElPiso(g, [[280, PISO_Y], [400, PISO_Y], [690, ALTO], [470, ALTO]], 0.12);
+  sombraDeLaPared(g);
+  dibujarCartelera(g);
+  dibujarTablero(g);
+  dibujarRelojDePared(g, 578, 46);
+  dibujarEscritorioDelProfe(g);
+  dibujarPupitre(g, 92, 528);
+  dibujarPupitre(g, 952, 528);
+}
+
+function dibujarCartelera(g) {
+  sombraSuave(76, 194, 62, 6, 0.25, g);
+  rectanguloConVolumen(18, 72, 114, 116, 4, ['#93694a', '#6e4b30'], null, g);
+  rectangulo(25, 79, 100, 102, 2, '#c99a63', null, g);
+  textura(g, 25, 79, 100, 102, 520, '#ecc48e66', '#7a522866', 3);
+  avisoClavado(g, 31, 86, 42, 34, -0.06, '#fffdf3');
+  avisoClavado(g, 80, 90, 38, 28, 0.08, '#fff1a8');
+  avisoClavado(g, 80, 128, 38, 44, -0.04, '#d8f0ff');
+  // Bandera de Colombia en papel
+  g.push();
+  g.translate(32, 132);
+  g.rotate(0.05);
+  rectangulo(0, 0, 40, 13, 0, '#fcd116', null, g);
+  rectangulo(0, 13, 40, 7, 0, '#003893', null, g);
+  rectangulo(0, 20, 40, 7, 0, '#ce1126', null, g);
+  g.pop();
+  ovalo(52, 133, 2.5, 2.5, '#d64545', null, g);
+}
+
+function avisoClavado(g, x, y, ancho, alto, angulo, color) {
+  g.push();
+  g.translate(x, y);
+  g.rotate(angulo);
+  rectangulo(2, 2, ancho, alto, 1, '#00000022', null, g);
+  rectangulo(0, 0, ancho, alto, 1, color, null, g);
+  for (let i = 0; i < 3; i++) trazo([[5, 9 + i * 7], [ancho - 6, 9 + i * 7]], '#8a8f9a', 1.4, g);
+  ovalo(ancho / 2, 3, 2.5, 2.5, '#d64545', null, g);
+  g.pop();
+}
+
+function dibujarTablero(g) {
+  sombraSuave(346, 200, 215, 8, 0.25, g);
+  rectanguloConVolumen(146, 62, 400, 134, 5, ['#dfe3e5', '#a3aaae', '#cfd4d6'], null, g);  // marco de aluminio
+  conContexto(g, c => {
+    c.fillStyle = degradadoLineal(c, 0, 70, 0, 188, ['#32634f', '#264c3f']);
+    c.fillRect(154, 70, 384, 118);
+  });
+  for (let i = 0; i < 18; i++) {  // polvo de tiza que quedó al borrar
+    const x = 165 + azar(i * 3) * 330;
+    const y = 80 + azar(i * 4) * 98;
+    g.stroke(255, 255, 255, 10 + azar(i) * 16);
+    g.strokeWeight(6 + azar(i * 2) * 10);
+    g.line(x, y, x + 30 + azar(i * 5) * 50, y + (azar(i * 6) - 0.5) * 8);
   }
-  g.stroke('#bdb4a1');
-  g.strokeWeight(1.5);
-  for (let y = 250; y < ALTO; y += 50) g.line(0, y, ANCHO, y);
-  conContexto(g, c => {  // sombra de la pared sobre el piso
-    c.fillStyle = degradadoLineal(c, 0, 250, 0, 290, ['#5a4a3040', '#5a4a3000']);
-    c.fillRect(0, 250, ANCHO, 40);
-  });
-  // Tablero con el mensaje de la semana ambiental
-  rectangulo(66, 66, 500, 132, 6, '#7a5a3a', null, g);
-  rectangulo(76, 74, 480, 112, 4, '#2f5d4a', null, g);
-  rectangulo(70, 184, 492, 8, 2, '#8b6a46', null, g);
-  rectangulo(110, 178, 22, 6, 2, '#f4f1e6', null, g);  // tiza
-  escribir('SEMANA AMBIENTAL', 316, 100, 22, '#eef3e8', CENTER, g);
-  escribir('¡Separa en la fuente!', 316, 130, 16, '#d8e8d0', CENTER, g);
-  escribir('Blanca', 236, 160, 15, '#ffffff', CENTER, g);
-  escribir('Verde', 316, 160, 15, '#8fe0a0', CENTER, g);
-  escribir('Negra', 396, 160, 15, '#a9b2b8', CENTER, g);
-  // Reloj de pared
-  ovalo(590, 42, 17, 17, '#ffffff', '#3d4a45', g);
-  trazo([[590, 42], [590, 31]], '#2d3a35', 2, g);
-  trazo([[590, 42], [598, 46]], '#2d3a35', 2, g);
-  // Escritorio del profesor con libros y un globo terráqueo
-  ovalo(210, 308, 165, 14, '#5a4a3038', null, g);
-  rectangulo(70, 262, 16, 44, 2, '#7a5232', null, g);
-  rectangulo(334, 262, 16, 44, 2, '#7a5232', null, g);
-  rectangulo(96, 262, 228, 30, 3, '#8f6440', null, g);
-  rectangulo(60, 246, 300, 18, 4, '#a57447', '#7a5232', g);
-  rectangulo(108, 230, 44, 16, 2, '#c0504d', null, g);
-  rectangulo(112, 220, 38, 11, 2, '#3f7fbf', null, g);
-  trazo([[300, 246], [300, 236]], '#5d4a36', 3, g);
-  ovalo(300, 224, 13, 13, '#4f9fd8', '#2e6f9f', g);
-  ovalo(296, 220, 5, 4, '#6cc070', null, g);
+  tiza(g, 'SEMANA AMBIENTAL', 346, 104, 22, '#f2f5ee');
+  tiza(g, '¡Separa en la fuente!', 346, 134, 16, '#dbe8d4');
+  tiza(g, 'Blanca', 270, 164, 15, '#ffffff');
+  tiza(g, 'Verde', 346, 164, 15, '#97e3a6');
+  tiza(g, 'Negra', 422, 164, 15, '#b3bcc2');
+  rectanguloConVolumen(150, 188, 392, 8, 2, ['#c9cfd2', '#8e969a'], null, g);  // repisa
+  rectangulo(186, 182, 20, 6, 2, '#f7f4ea', null, g);                            // tizas
+  rectangulo(214, 183, 14, 5, 2, '#f2d2d8', null, g);
+  rectanguloConVolumen(470, 179, 34, 10, 2, ['#4a5aa0', '#26305e'], null, g);   // borrador
+}
+
+function dibujarRelojDePared(g, x, y) {
+  sombraSuave(x + 2, y + 3, 20, 20, 0.2, g);
+  ovaloConVolumen(x, y, 18, 18, '#ffffff', '#c9cdd0', g);
+  ovalo(x, y, 18, 18, '#00000000', '#3d4a45', g);
+  for (let i = 0; i < 12; i++) {
+    const a = (i * TWO_PI) / 12;
+    trazo([[x + cos(a) * 13, y + sin(a) * 13], [x + cos(a) * 15, y + sin(a) * 15]], '#3d4a45', 1.5, g);
+  }
+  trazo([[x, y], [x, y - 11]], '#2d3a35', 2, g);
+  trazo([[x, y], [x + 8, y + 4]], '#2d3a35', 2, g);
+}
+
+function dibujarEscritorioDelProfe(g) {
+  sombraSuave(190, 320, 180, 16, 0.4, g);
+  poligonoConVolumen([[52, 256], [326, 256], [340, 274], [40, 274]], ['#c99561', '#a5733f'], '#7a5232', g, true);
+  rectanguloConVolumen(40, 274, 300, 42, 3, ['#956944', '#7a5232', '#5c3c24'], null, g);
+  trazo([[52, 286], [328, 286]], '#5f3f26', 1.5, g);
+  rectanguloConVolumen(176, 292, 28, 5, 2, ['#e6c47c', '#b8913f'], null, g);  // manija del cajón
+  // Libros y globo terráqueo
+  rectanguloConVolumen(96, 240, 46, 14, 2, ['#e0706a', '#a83f3b'], null, g);
+  rectanguloConVolumen(100, 230, 40, 11, 2, ['#5b9ad8', '#2f6ea8'], null, g);
+  trazo([[288, 262], [288, 250]], '#5d4a36', 3, g);
+  ovaloConVolumen(288, 236, 14, 14, '#8fd0f5', '#2e6f9f', g);
+  ovalo(284, 232, 5, 4, '#6cc070', null, g);
+  ovalo(293, 241, 4, 3, '#6cc070', null, g);
+}
+
+// Pupitre visto desde atrás: tablero de madera y espaldar azul de la silla.
+function dibujarPupitre(g, x, y) {
+  sombraSuave(x, y + 52, 80, 12, 0.35, g);
+  trazo([[x - 52, y + 6], [x - 48, y + 54]], '#5c6670', 5, g);
+  trazo([[x + 52, y + 6], [x + 48, y + 54]], '#5c6670', 5, g);
+  poligonoConVolumen([[x - 58, y - 10], [x + 58, y - 10], [x + 64, y + 4], [x - 64, y + 4]], ['#e0b884', '#b98a52'], '#8f6a3d', g, true);
+  rectangulo(x - 64, y + 4, 128, 6, 2, '#8f6a3d', null, g);
+  trazo([[x - 30, y + 30], [x - 30, y + 56]], '#5c6670', 4, g);
+  trazo([[x + 30, y + 30], [x + 30, y + 56]], '#5c6670', 4, g);
+  rectanguloConVolumen(x - 42, y + 12, 84, 26, 9, ['#5b9ad8', '#3a72b5', '#2a5690'], null, g);
 }
 
 // Nivel 2: la tienda escolar y el patio en el descanso.
 function dibujarTiendaEscolar(g) {
+  g.background('#c9ccc5');
+  dibujarCielo(g, 82, ['#7fbedc', '#c6e6ef']);
+  dibujarNubes(g, [[560, 22, 1], [880, 30, 0.8]]);
+  // Tejado de barro
+  for (let x = 0; x < ANCHO; x += 18) rectanguloConVolumen(x, 50, 18, 32, 8, ['#e08a63', '#b4553e', '#86392a'], null, g);
+  // Fachada con textura y humedad abajo
   conContexto(g, c => {
-    c.fillStyle = degradadoLineal(c, 0, 0, 0, 80, ['#8cc8e0', '#c4e6ef']);
-    c.fillRect(0, 0, ANCHO, 80);
+    c.fillStyle = degradadoLineal(c, 0, 80, 0, 205, ['#f3e1ae', '#e3cb8f']);
+    c.fillRect(0, 80, ANCHO, 125);
+    c.fillStyle = degradadoLineal(c, 0, 80, 0, 100, ['rgba(60,40,20,0.35)', 'rgba(60,40,20,0)']);
+    c.fillRect(0, 80, ANCHO, 20);
+    c.fillStyle = degradadoLineal(c, 0, 205, 0, PISO_Y, ['#5aa077', '#3f7c5b']);
+    c.fillRect(0, 205, ANCHO, PISO_Y - 205);
   });
-  // Fachada del colegio
-  rectangulo(0, 62, ANCHO, 12, 0, '#b4553e', null, g);  // borde de teja
-  rectangulo(0, 74, ANCHO, 176, 0, '#f0dca6', null, g);
-  rectangulo(0, 205, ANCHO, 45, 0, '#4f8f6a', null, g);  // zócalo verde
-  for (const x of [384, 488]) {                          // ventanas
-    rectangulo(x, 96, 84, 74, 4, '#e8e2cf', '#8f8a7a', g);
-    rectangulo(x + 6, 102, 72, 62, 2, '#9fd0e6', null, g);
-    trazo([[x + 42, 102], [x + 42, 164]], '#e8e2cf', 4, g);
-    trazo([[x + 6, 133], [x + 78, 133]], '#e8e2cf', 4, g);
-  }
-  // Jardinera con plantas
-  for (let i = 0; i < 7; i++) ovalo(392 + i * 30, 212, 17, 15, i % 2 ? '#4fa45c' : '#3d8a4c', null, g);
-  for (let i = 0; i < 5; i++) ovalo(404 + i * 40, 204, 4, 4, ['#ffd166', '#ff8fa3'][i % 2], null, g);
-  rectangulo(372, 218, 212, 32, 4, '#b4553e', '#8d3f2d', g);
-  // Piso del patio
+  textura(g, 0, 82, ANCHO, 168, 2400, '#ffffff22', '#6b552a18', 4);
+  manchas(g, 0, 170, ANCHO, 30, 10, '#8a744a14', 5);
+  for (const x of [384, 488]) dibujarVentanaConReja(g, x, 98);
+  dibujarJardinera(g, 372, 218, 212);
+  // Piso del patio: placas de cemento en perspectiva
+  dibujarPisoDeBaldosas(g, 130, ['#cdd0c9', '#c3c6be'], '#a3a79f', 42);
+  textura(g, 0, PISO_Y, ANCHO, ALTO - PISO_Y, 2600, '#ffffff22', '#4a4a4018', 6);
+  manchas(g, 0, 300, ANCHO, 280, 10, '#6b6a5a12', 7);
+  luzEnElPiso(g, [[600, PISO_Y], [1040, PISO_Y], [1040, ALTO], [760, ALTO]], 0.14);
+  sombraDeLaPared(g, 0.34);
+  dibujarTienda(g);
+}
+
+function dibujarCielo(g, alto, colores) {
   conContexto(g, c => {
-    c.fillStyle = degradadoLineal(c, 0, 250, 0, ALTO, ['#d3d6cf', '#b8bcb5']);
-    c.fillRect(0, 250, ANCHO, ALTO - 250);
-    c.fillStyle = degradadoLineal(c, 0, 250, 0, 285, ['#3a3a3038', '#3a3a3000']);
-    c.fillRect(0, 250, ANCHO, 35);
+    c.fillStyle = degradadoLineal(c, 0, 0, 0, alto, colores);
+    c.fillRect(0, 0, ANCHO, alto);
   });
-  g.stroke('#a9ada5');
-  g.strokeWeight(1.5);
-  for (let y = 310; y < ALTO; y += 70) g.line(0, y, ANCHO, y);
-  for (let x = -260; x <= ANCHO + 260; x += 130) g.line(x, 250, 520 + (x - 520) * 1.35, ALTO);
-  // Tienda escolar: estantes con mecato, toldo y mostrador
-  rectangulo(40, 92, 300, 158, 6, '#fbf8ef', '#c9c2ad', g);
-  const colores = ['#f2c230', '#d64545', '#3f8fd2', '#4caf68', '#ef8a3c'];
-  for (const fila of [116, 154]) {
-    for (let i = 0; i < 11; i++) rectangulo(62 + i * 24, fila, 18, 24, 3, colores[(i * 2 + fila) % 5], null, g);
-    rectangulo(56, fila + 24, 268, 5, 1, '#8f6440', null, g);
+}
+
+function dibujarNubes(g, nubes) {
+  for (const [x, y, e] of nubes) {
+    ovalo(x - 26 * e, y + 6 * e, 34 * e, 12 * e, '#ffffffb0', null, g);
+    ovalo(x, y, 30 * e, 16 * e, '#ffffffd0', null, g);
+    ovalo(x + 28 * e, y + 6 * e, 34 * e, 11 * e, '#ffffffb8', null, g);
   }
-  for (let i = 0; i < 10; i++) {                         // toldo a rayas
-    rectangulo(30 + i * 32, 84, 32, 22, 0, i % 2 ? '#f4f4f0' : '#d9443a', null, g);
-    ovalo(46 + i * 32, 106, 16, 7, i % 2 ? '#f4f4f0' : '#d9443a', null, g);
+}
+
+function dibujarVentanaConReja(g, x, y) {
+  sombraSuave(x + 44, y + 82, 46, 5, 0.2, g);
+  rectanguloConVolumen(x, y, 88, 78, 3, ['#f4f1e6', '#d5d0c0'], '#9a9583', g);
+  conContexto(g, c => {
+    c.fillStyle = degradadoLineal(c, x, y, x + 88, y + 78, ['#bfe3f2', '#7fb6cf', '#a9d4e6']);
+    c.fillRect(x + 6, y + 6, 76, 66);
+    c.fillStyle = 'rgba(255,255,255,0.35)';  // reflejo
+    trazarPoligono(c, [[x + 14, y + 6], [x + 34, y + 6], [x + 14, y + 40]]);
+    c.fill();
+  });
+  for (let i = 1; i < 8; i++) trazo([[x + 6 + i * 9.5, y + 6], [x + 6 + i * 9.5, y + 72]], '#3a3f44', 2, g);  // reja
+  trazo([[x + 6, y + 39], [x + 82, y + 39]], '#3a3f44', 2.5, g);
+}
+
+function dibujarJardinera(g, x, y, ancho) {
+  for (let i = 0; i < 8; i++) {
+    ovaloConVolumen(x + 14 + i * 27, y - 8 - azar(i) * 6, 17, 15, i % 2 ? '#7ccf86' : '#5cb36a', '#2f6e3c', g);
   }
-  rectangulo(108, 58, 164, 28, 8, '#2f6b4f', '#ffffff', g);
+  for (let i = 0; i < 5; i++) ovalo(x + 30 + i * 40, y - 16, 4, 4, ['#ffd166', '#ff8fa3'][i % 2], null, g);
+  rectanguloConVolumen(x, y, ancho, 32, 4, ['#c9674b', '#a5492f', '#7f3524'], null, g);
+  for (let fila = 0; fila < 3; fila++) {   // ladrillos
+    trazo([[x, y + 10 + fila * 10], [x + ancho, y + 10 + fila * 10]], '#7f352466', 1, g);
+  }
+}
+
+function dibujarTienda(g) {
+  // Pared interior con estantes de mecato
+  rectanguloConVolumen(36, 92, 308, 150, 4, ['#fdfbf4', '#e6e0d0'], '#c9c2ad', g);
+  const productos = [['#ffe27a', '#c99a12'], ['#f07a7a', '#a42f2f'], ['#7fbcf0', '#2f6ea8'], ['#8ad79a', '#2f8a4d'], ['#f8b77a', '#c26a24']];
+  for (const fila of [112, 152]) {
+    for (let i = 0; i < 9; i++) {
+      const [claro, oscuro] = productos[(i * 2 + fila) % 5];
+      rectanguloConVolumen(54 + i * 24, fila, 19, 26, 4, [claro, oscuro], null, g);
+      rectangulo(57 + i * 24, fila + 9, 13, 7, 2, '#ffffffaa', null, g);  // etiqueta del paquete
+    }
+    rectanguloConVolumen(48, fila + 26, 230, 5, 1, ['#a8784e', '#7a5232'], null, g);
+  }
+  // Nevera con bebidas
+  rectanguloConVolumen(282, 98, 56, 140, 5, ['#f4f6f6', '#cfd5d6', '#aeb6b8'], '#8f989a', g);
+  rectangulo(288, 106, 44, 96, 3, '#cfe9f2', null, g);
+  for (let fila = 0; fila < 3; fila++) {
+    for (let i = 0; i < 4; i++) {
+      rectanguloConVolumen(291 + i * 10, 112 + fila * 31, 8, 24, 3, [['#ff8a8a', '#c62828'], ['#9be7a8', '#2f8a4d'], ['#ffd27a', '#c98a12']][(i + fila) % 3], null, g);
+    }
+  }
+  conContexto(g, c => {
+    c.fillStyle = 'rgba(255,255,255,0.35)';
+    trazarPoligono(c, [[292, 106], [306, 106], [292, 140]]);
+    c.fill();
+  });
+  // Toldo a rayas
+  for (let i = 0; i < 10; i++) {
+    const colores = i % 2 ? ['#ffffff', '#e2e2dc'] : ['#e8574c', '#b8322a'];
+    rectanguloConVolumen(30 + i * 32, 84, 32, 22, 0, colores, null, g);
+    ovaloConVolumen(46 + i * 32, 106, 16, 7, colores[0], colores[1], g);
+  }
+  conContexto(g, c => {   // sombra del toldo sobre la pared
+    c.fillStyle = degradadoLineal(c, 0, 108, 0, 128, ['rgba(40,30,20,0.25)', 'rgba(40,30,20,0)']);
+    c.fillRect(36, 108, 308, 20);
+  });
+  rectanguloConVolumen(108, 58, 164, 28, 8, ['#3a8262', '#2f6b4f'], '#ffffff', g);
   escribir('TIENDA ESCOLAR', 190, 72, 13, '#ffffff', CENTER, g);
-  ovalo(190, 332, 165, 12, '#3a3a3030', null, g);
-  rectangulo(46, 254, 288, 74, 4, '#2f6b4f', '#244f3b', g);
-  rectangulo(36, 238, 308, 18, 4, '#c98a4b', '#93602f', g);
-  rectangulo(62, 268, 92, 48, 3, '#fdf6e3', null, g);  // tablero de precios
+  // Mostrador
+  sombraSuave(190, 334, 180, 14, 0.4, g);
+  rectanguloConVolumen(28, 254, 326, 74, 4, ['#41936b', '#2f6b4f', '#24563f'], null, g);
+  poligonoConVolumen([[30, 238], [350, 238], [356, 256], [24, 256]], ['#e0a466', '#b8793d'], '#93602f', g, true);
+  rectanguloConVolumen(62, 268, 92, 48, 3, ['#fffbef', '#ece4cf'], null, g);  // tablero de precios
   for (const y of [280, 292, 304]) trazo([[70, y], [146, y]], '#9a8f78', 2, g);
+  // Frasco de dulces sobre el mostrador
+  ovaloConVolumen(310, 226, 15, 14, '#ffffffcc', '#bcd7e0aa', g);
+  for (let i = 0; i < 6; i++) ovalo(302 + azar(i) * 16, 222 + azar(i * 2) * 10, 3, 3, ['#ff8fa3', '#ffd166', '#8fe0a0'][i % 3], null, g);
 }
 
 // Nivel 3: la cancha múltiple después del partido del descanso.
 function dibujarCancha(g) {
+  g.background('#c4673f');
+  dibujarCielo(g, 210, ['#6fb2d2', '#cbe8ee']);
+  conContexto(g, c => {   // brillo del sol
+    const sol = c.createRadialGradient(330, 46, 4, 330, 46, 160);
+    sol.addColorStop(0, 'rgba(255,250,220,0.95)');
+    sol.addColorStop(0.15, 'rgba(255,240,190,0.5)');
+    sol.addColorStop(1, 'rgba(255,240,190,0)');
+    c.fillStyle = sol;
+    c.fillRect(170, 0, 320, 210);
+  });
+  dibujarNubes(g, [[600, 40, 1], [860, 70, 0.8], [120, 90, 0.7]]);
+  // Montañas a lo lejos
+  g.noStroke();
+  g.fill('#9fbdb3');
+  g.beginShape();
+  g.vertex(0, 150);
+  for (let x = 0; x <= ANCHO; x += 40) g.vertex(x, 128 + sin(x * 0.01) * 18 + azar(x) * 10);
+  g.vertex(ANCHO, 210);
+  g.vertex(0, 210);
+  g.endShape(CLOSE);
+  // Árboles detrás de la malla
   conContexto(g, c => {
-    c.fillStyle = degradadoLineal(c, 0, 0, 0, 210, ['#79b9d6', '#cbe8ee']);
-    c.fillRect(0, 0, ANCHO, 210);
-    // Árboles detrás de la malla
     for (let i = 0; i < 9; i++) {
       const x = 30 + i * 125 + azar(i) * 30;
-      c.fillStyle = '#6b5236';
-      c.fillRect(x - 5, 150, 10, 60);
-      ovaloDegradado(c, x, 140, 46 + azar(i * 2) * 14, 40, '#7bd08f', '#2f7a4f');
+      c.fillStyle = degradadoLineal(c, x - 6, 0, x + 6, 0, ['#8a6a46', '#5a4128']);
+      c.fillRect(x - 6, 150, 12, 60);
+      ovaloDegradado(c, x, 140, 48 + azar(i * 2) * 14, 42, '#8fdc9f', '#2a6f47');
     }
   });
-  ovalo(330, 46, 22, 22, '#fff6c8', null, g);  // sol
+  // Gradería de cemento
+  for (let i = 0; i < 4; i++) {
+    const y = 140 + i * 16;
+    rectangulo(20 - i * 8, y, 280 + i * 16, 6, 0, '#e2e2da', null, g);
+    rectanguloConVolumen(20 - i * 8, y + 6, 280 + i * 16, 10, 0, ['#c2c2b8', '#a5a59b'], null, g);
+  }
   // Muro bajo y malla
-  rectangulo(0, 205, ANCHO, 45, 0, '#d8d1bd', null, g);
-  g.stroke('#7d8a8588');
+  conContexto(g, c => {
+    c.fillStyle = degradadoLineal(c, 0, 205, 0, 245, ['#ddd6c3', '#c2baa4']);
+    c.fillRect(0, 205, ANCHO, 40);
+  });
+  textura(g, 0, 205, ANCHO, 40, 700, '#ffffff22', '#5a503818', 8);
+  g.stroke('#6d7a7588');
   g.strokeWeight(1);
-  for (let x = -120; x < ANCHO; x += 16) {
+  for (let x = -120; x < ANCHO; x += 14) {
     g.line(x, 205, x + 110, 95);
     g.line(x, 95, x + 110, 205);
   }
-  for (let x = 10; x < ANCHO; x += 130) trazo([[x, 92], [x, 206]], '#5f6b66', 5, g);
-  trazo([[0, 95], [ANCHO, 95]], '#5f6b66', 4, g);
-  // Piso de la cancha con sus líneas
-  rectangulo(0, 245, ANCHO, ALTO - 245, 0, '#c4673f', null, g);
-  rectangulo(24, 260, ANCHO - 48, ALTO - 272, 0, '#3e8e74', null, g);
+  for (let x = 10; x < ANCHO; x += 130) rectanguloConVolumen(x - 3, 90, 7, 118, 2, ['#9aa6a1', '#4f5a56'], null, g);
+  rectanguloConVolumen(0, 92, ANCHO, 5, 2, ['#8a9691', '#5f6b66'], null, g);
+  // Piso: borde de color ladrillo y superficie de la cancha en perspectiva
+  conContexto(g, c => {
+    c.fillStyle = degradadoLineal(c, 0, 245, 0, ALTO, ['#b85e38', '#cf7046']);
+    c.fillRect(0, 245, ANCHO, ALTO - 245);
+    c.fillStyle = degradadoLineal(c, 0, 260, 0, ALTO, ['#3f8a70', '#4a9a80']);
+    trazarPoligono(c, [[xEnPerspectiva(26, 260), 260], [xEnPerspectiva(1014, 260), 260], [xEnPerspectiva(1014, ALTO), ALTO], [xEnPerspectiva(26, ALTO), ALTO]]);
+    c.fill();
+  });
+  textura(g, 0, 260, ANCHO, ALTO - 260, 3000, '#ffffff1c', '#1a3a2e18', 9);
+  manchas(g, 0, 290, ANCHO, 280, 12, '#d8e8cc10', 10);
+  sombraDeLaPared(g, 0.3);
+  // Líneas de la cancha (también en perspectiva)
   g.noFill();
-  g.stroke('#f2f5ef');
+  g.stroke('#f2f5efdd');
   g.strokeWeight(3);
-  g.rect(40, 274, ANCHO - 80, ALTO - 300);
-  g.line(520, 274, 520, ALTO - 26);
-  g.ellipse(520, 416, 150, 100);
-  g.arc(40, 416, 240, 190, -HALF_PI, HALF_PI);
+  g.line(xEnPerspectiva(48, 276), 276, xEnPerspectiva(992, 276), 276);
+  g.line(xEnPerspectiva(48, 276), 276, xEnPerspectiva(48, ALTO), ALTO);
+  g.line(xEnPerspectiva(992, 276), 276, xEnPerspectiva(992, ALTO), ALTO);
+  g.line(FUGA.x, 276, FUGA.x, ALTO);
+  g.ellipse(FUGA.x, 430, 190, 86);
+  g.arc(xEnPerspectiva(48, 430), 430, 300, 170, -HALF_PI, HALF_PI);
   // Arco de microfútbol con su red
-  ovalo(86, 386, 60, 8, '#00000030', null, g);
+  sombraSuave(88, 388, 64, 9, 0.35, g);
   g.stroke('#ffffff88');
   g.strokeWeight(1);
   for (let x = 44; x < 128; x += 10) g.line(x, 302, x, 382);
   for (let y = 308; y < 382; y += 10) g.line(42, y, 128, y);
-  trazo([[38, 384], [38, 298], [130, 298], [130, 384]], '#ffffff', 6, g);
+  trazo([[38, 384], [38, 298], [130, 298], [130, 384]], '#d9dcda', 7, g);
+  trazo([[37, 384], [37, 297], [129, 297], [129, 384]], '#ffffff', 4, g);
   // Balón
-  ovalo(996, 534, 13, 13, '#ffffff', '#3a3a3a', g);
-  poligono([[996, 528], [1002, 533], [999, 540], [993, 540], [990, 533]], '#3a3a3a', null, g);
+  sombraSuave(998, 548, 16, 5, 0.4, g);
+  ovaloConVolumen(996, 534, 13, 13, '#ffffff', '#b9bec2', g);
+  poligono([[996, 528], [1002, 533], [999, 540], [993, 540], [990, 533]], '#2f3438', null, g);
 }
 
 // Escenario 2 del documento: el punto ecológico del colegio (las canecas se dibujan aparte).
 function dibujarPuntoEcologico(g) {
-  ovalo(839, 232, 214, 45, '#09271838', null, g);
+  sombraSuave(830, 238, 235, 24, 0.35, g);
   g.push();
   g.translate(622, 59);
-  rectangulo(0, 10, 407, 176, 23, '#1a524b44', '#c3edc366', g);
-  rectangulo(7, 13, 393, 160, 20, '#ffffff1a', null, g);
-  g.noStroke();
-  g.fill('#2b6a53');
-  g.quad(-10, 55, 37, 9, 377, 9, 417, 55);                   // techo
-  rectangulo(13, 54, 381, 12, 5, '#254c3e', null, g);
-  for (let i = 0; i < 5; i++) {                               // columnas
-    const px = 18 + i * 92;
-    trazo([[px, 56], [px, 159]], '#457f66', 10, g);
-    trazo([[px - 2, 65], [px - 2, 151]], '#8fbb9280', 3, g);
+  rectanguloConVolumen(6, 60, 395, 120, 8, ['#347a62', '#2a6551', '#235646'], null, g);  // panel trasero
+  textura(g, 6, 60, 395, 120, 420, '#ffffff12', '#00000014', 11);
+  for (let i = 0; i < 5; i++) {                                                             // columnas metálicas
+    rectanguloConVolumen(13 + i * 92, 56, 10, 126, 3, ['#b5c6bf', '#6f8a7f', '#3f5a4e'], null, g);
   }
-  escribir('♻  PUNTO ECOLÓGICO', 203, 36, 15, '#f3fff0', CENTER, g);
+  poligonoConVolumen([[-10, 55], [37, 9], [377, 9], [417, 55]], ['#45967a', '#2b6a53', '#1f4f3e'], null, g, true);
+  rectanguloConVolumen(-10, 52, 427, 10, 3, ['#2d6a54', '#1c4537'], null, g);
+  conContexto(g, c => {   // sombra del techo
+    c.fillStyle = degradadoLineal(c, 0, 62, 0, 92, ['rgba(0,0,0,0.3)', 'rgba(0,0,0,0)']);
+    c.fillRect(6, 62, 395, 30);
+  });
+  rectanguloConVolumen(118, 20, 170, 26, 8, ['#ffffff', '#e4ece6'], '#1f5a44', g);
+  escribir('♻ PUNTO ECOLÓGICO', 203, 33, 13, '#1f5a44', CENTER, g);
   g.pop();
 }
 
@@ -939,6 +1116,7 @@ function dibujarEscena() {
   dibujarCanecas();
   dibujarMarcaDestino();
   dibujarResiduosYJugador();
+  dibujarLuz();
   dibujarAyudaCercana();
   dibujarParticulas();
   if (colegioRecuperado) dibujarConfeti();
@@ -948,7 +1126,7 @@ function dibujarEscena() {
 function dibujarSuciedad(limpieza) {
   if (limpieza < 1) {
     noStroke();
-    fill(110, 95, 60, 55 * (1 - limpieza));
+    fill(110, 95, 60, 40 * (1 - limpieza));
     rect(0, 0, ANCHO, ALTO);
   }
   for (const p of PAPELITOS) {
@@ -1020,20 +1198,29 @@ function dibujarCanecas() {
   for (const caneca of CANECAS) dibujarCaneca(caneca, hayPista && residuoCargado.tipo === caneca.tipo);
 }
 
+// Caneca con volumen: cuerpo con luz y sombra, tapa, agarradera, pedal y etiqueta.
 function dibujarCaneca(caneca, iluminada) {
   push();
   translate(caneca.x, 192 + (iluminada ? sin(reloj * 6) * 1.5 : 0));
-  ovalo(4, 34, 44, 12, '#09271855');                                         // sombra
-  if (iluminada) ovalo(0, -8, 62 + sin(reloj * 5) * 3, 66 + sin(reloj * 5) * 3, '#fffbc770');
-  poligono([[34, -43], [46, -36], [46, 33], [34, 40]], caneca.oscuro);       // costado
-  rectangulo(-35, -43, 70, 82, 9, caneca.color, '#163e3a55');                // cuerpo
-  rectangulo(-31, -39, 12, 72, 6, '#ffffff30');                              // brillo
-  rectangulo(-40, -50, 81, 13, 5, caneca.oscuro);                            // tapa
-  rectangulo(-26, -23, 53, 45, 7, '#ffffffd0');                              // placa del símbolo
+  sombraSuave(0, 40, 56, 12, 0.55);
+  if (iluminada) ovalo(0, -6, 62 + sin(reloj * 5) * 3, 66 + sin(reloj * 5) * 3, '#fffbc770');
+  const colores = [caneca.claro, caneca.color, caneca.oscuro];
+  poligonoConVolumen([[-35, -40], [35, -40], [30, 38], [-30, 38]], colores);   // cuerpo (más angosto abajo)
+  trazo([[-24, -30], [-21, 30]], '#00000014', 3);                             // relieve lateral
+  trazo([[24, -30], [21, 30]], '#ffffff14', 3);
+  poligonoConVolumen([[-37, -52], [37, -52], [41, -43], [-41, -43]], colores, null, pantalla, true);  // tapa
+  rectanguloConVolumen(-41, -44, 82, 7, 3, [caneca.color, caneca.oscuro]);
+  rectangulo(-11, -50, 22, 4, 2, '#00000030');                                 // agarradera
+  rectanguloConVolumen(-9, 35, 18, 6, 2, ['#5b6268', '#2a2f33']);              // pedal
+  rectangulo(-22, -27, 44, 40, 6, '#ffffffee', '#00000020');                    // etiqueta
+  push();
+  translate(0, -7);
+  scale(0.85);
   dibujarSimboloCaneca(caneca);
+  pop();
   const e = min(escalaTexto, 1.3);
   rectangulo(-49 * e, 51, 98 * e, 24 * e, 9, '#fbfff3f2');
-  escribir(caneca.nombre, 0, 51 + 12 * e, (caneca.nombre.length > 8 ? 11 : 12) * e, '#275443');
+  escribir(caneca.nombre, 0, 51 + 12 * e, 12 * e, '#275443');
   pop();
 }
 
@@ -1076,7 +1263,7 @@ function dibujarAyudaCercana() {
   let accion = null;
   if (!residuoCargado && residuoMasCercano()) accion = 'RECOGER';
   if (residuoCargado && canecaMasCercana()) accion = 'DEPOSITAR';
-  if (accion) burbuja(esPantallaTactil ? `👆 ${accion}` : `E · ${accion}`, jugadorX, jugadorY - 185);
+  if (accion) burbuja(esPantallaTactil ? `👆 ${accion}` : `E · ${accion}`, jugadorX, jugadorY - 185 * escalaPorProfundidad(jugadorY));
 }
 
 function dibujarConfeti() {
@@ -1098,59 +1285,58 @@ function dibujarConfeti() {
 /* ===== 10. DIBUJO DE RESIDUOS Y DEL PERSONAJE ===== */
 
 function dibujarResiduo(r, resaltado) {
-  const flotar = sin(reloj * 2 + r.semilla) * 2;
-  ovalo(r.x, r.y + 12, 28, 9, '#0927183d');                       // sombra
-  if (resaltado) ovalo(r.x, r.y - 4, 38, 34, '#fff8b455');        // brillo cuando está cerca
+  const escala = escalaPorProfundidad(r.y);
+  const levantar = resaltado ? abs(sin(reloj * 4)) * 3 : 0;  // salta un poco cuando está cerca
+  sombraSuave(r.x, r.y + 12 * escala, 27 * escala, 8 * escala, 0.5);
+  if (resaltado) ovalo(r.x, r.y - 4, 38 * escala, 34 * escala, '#fff8b440');
   push();
-  translate(r.x, r.y - 2 + flotar);
+  translate(r.x, r.y - 2 - levantar);
+  scale(escala);
   rotate(0.1 * sin(r.semilla));
   dibujarArteResiduo(r.dibujo);
   pop();
-  if (NIVELES[nivel - 1].nombresVisibles || resaltado) etiqueta(r.nombre, r.x, r.y + 38);
+  if (NIVELES[nivel - 1].nombresVisibles || resaltado) etiqueta(r.nombre, r.x, r.y + 38 * escala);
 }
 
-// Dibuja cada residuo alrededor del punto (0, 0).
+// Dibuja cada residuo alrededor del punto (0, 0), con luz arriba a la izquierda.
 function dibujarArteResiduo(dibujo) {
   switch (dibujo) {
     // ----- Caneca blanca: aprovechables limpios y secos -----
     case 'hoja':
-      poligono([[-15, -15], [7, -19], [19, -6], [14, 17], [-16, 13]], '#fffdf2', '#7c9e9d');
+      poligonoConVolumen([[-15, -15], [7, -19], [19, -6], [14, 17], [-16, 13]], ['#ffffff', '#f4f2ea', '#e2dfd2'], '#9fb3b2');
       trazo([[-9, -5], [6, -7]], '#a5c6ce', 2);
       trazo([[-9, 2], [10, 1]], '#a5c6ce', 2);
       trazo([[-8, 9], [6, 9]], '#a5c6ce', 2);
+      trazo([[-12, -16], [-12, 14]], '#e8a0a0', 1.2);  // margen del cuaderno
       break;
     case 'fotocopias':
-      rectangulo(-14, -18, 30, 36, 1, '#eeeeea', '#9aa3a8');
-      rectangulo(-18, -14, 30, 36, 1, '#ffffff', '#7f8a90');
+      rectanguloConVolumen(-14, -18, 30, 36, 1, ['#f2f2ee', '#dcdcd6'], '#9aa3a8');
+      rectanguloConVolumen(-18, -14, 30, 36, 1, ['#ffffff', '#ecece6'], '#7f8a90');
       for (const y of [-7, -2, 3, 8, 13]) trazo([[-13, y], [7, y]], '#6f7a80', 1.5);
       ovalo(-15, -11, 2, 2, '#9aa3a8');  // gancho de cosedora
       break;
     case 'botella':
-      rectangulo(-8, -25, 16, 9, 2, '#62b4da', '#367994');
-      rectangulo(-11, -17, 22, 37, 7, '#a8e5ec', '#4298b0');
-      rectangulo(-9, -1, 18, 10, 2, '#ffffffb7');
-      break;
-    case 'lata':
-      rectangulo(-11, -18, 22, 36, 5, '#d64545', '#8f2a2a');
-      rectangulo(-11, -4, 22, 8, 0, '#f2f2f2');
-      ovalo(0, -18, 11, 4, '#c9cfd4', '#8a9298');
-      ovalo(-4, -18, 3, 1.5, '#6f777d');
-      break;
-    case 'cajaJugo':
-      rectangulo(-12, -16, 24, 32, 3, '#ffd166', '#c9962a');
-      rectangulo(-12, -16, 24, 7, 2, '#f4f4f4');
-      ovalo(-2, 3, 7, 7, '#ef8a3c');
-      trazo([[6, -16], [10, -28]], '#ffffff', 3);  // pitillo
+      dibujarBotella(['#e4f7fbcc', '#9fdbe8cc', '#5aaec4cc'], ['#7cc6e6', '#2f7ea6'], '#ffffffd0');
       break;
     case 'bebida':
-      rectangulo(-8, -25, 16, 9, 2, '#2c7be5', '#1b4f99');
-      rectangulo(-11, -17, 22, 37, 7, '#7fd3f7', '#2a8cc0');
-      rectangulo(-11, -4, 22, 12, 2, '#f25c54');
+      dibujarBotella(['#b8ecffcc', '#62c4ef', '#2a8cc0'], ['#4f94ef', '#1b4f99'], '#f25c54');
+      break;
+    case 'lata':
+      rectanguloConVolumen(-11, -18, 22, 36, 5, ['#ff9a9a', '#d23a3a', '#8e1d1d', '#c84545'], '#7a1414');
+      rectanguloConVolumen(-11, -4, 22, 8, 0, ['#ffffff', '#d9d9d9']);
+      ovaloConVolumen(0, -18, 11, 4, '#f4f6f8', '#8a9298');
+      ovalo(-4, -18, 3, 1.5, '#6f777d');
+      trazo([[-6, -14], [-6, 14]], '#ffffff66', 2);  // brillo metálico
+      break;
+    case 'cajaJugo':
+      dibujarCaja(-12, -14, 22, 30, 7, ['#ffe08a', '#f7c548'], '#d9a42a', '#fff2c4');
+      rectangulo(-12, -14, 22, 6, 1, '#f4f4f4');
+      ovaloConVolumen(-1, 4, 7, 7, '#ffb36b', '#e0702a');
+      trazo([[4, -18], [9, -30]], '#ffffff', 3);  // pitillo
       break;
     case 'caja':
-      rectangulo(-20, -13, 40, 27, 3, '#c99460', '#a87442');
-      trazo([[0, -13], [0, 14]], '#a87442', 2);
-      trazo([[-20, -4], [0, 0], [20, -4]], '#e3b682', 2);
+      dibujarCaja(-20, -10, 34, 24, 9, ['#d9a56c', '#c08a50'], '#9a6a38', '#e6bd88');
+      trazo([[-3, -10], [-3, 14]], '#c9b48a', 4);  // cinta
       break;
     // ----- Caneca verde: orgánicos -----
     case 'banano':
@@ -1163,15 +1349,21 @@ function dibujarArteResiduo(dibujo) {
       quadraticVertex(16, 12, -3, 13);
       quadraticVertex(-15, 7, -21, -10);
       endShape(CLOSE);
-      ovalo(22, -12, 3, 3, '#7e6b42');
+      noFill();
+      stroke('#fff3b0');
+      strokeWeight(2);
+      arc(1, -6, 34, 30, 0.6, 2.4);  // brillo
+      ovalo(22, -12, 3, 3, '#5e4a2a');
+      ovalo(-6, 6, 2, 1.5, '#8a6a2a');
+      ovalo(6, 7, 1.5, 1.2, '#8a6a2a');
       break;
     case 'naranja':
       fill('#f9ac4c');
       stroke('#cc7929');
       strokeWeight(2);
       arc(0, 0, 38, 38, 0.15, PI * 1.7, PIE);
-      ovalo(0, 0, 12, 12, '#ffe09e');
-      ovalo(3, 0, 4, 4, '#fff4bf');
+      ovaloConVolumen(0, 0, 13, 13, '#fff2c4', '#ffcf7a');
+      for (let i = 0; i < 6; i++) trazo([[0, 0], [cos(i) * 11, sin(i) * 11]], '#f7b95e', 1);
       break;
     case 'mandarina':
       push();
@@ -1181,55 +1373,76 @@ function dibujarArteResiduo(dibujo) {
       ovalo(-12, -12, 5, 3, '#5aa05c');  // hojita
       break;
     case 'manzana':
-      ovalo(0, -11, 11, 6, '#de7464', '#a94845');
-      rectangulo(-6, -9, 12, 18, 5, '#fbefc9', '#d8c79a');
-      ovalo(0, 11, 11, 6, '#de7464', '#a94845');
+      ovaloConVolumen(0, -11, 11, 6, '#f29a8c', '#b84a40');
+      rectanguloConVolumen(-6, -9, 12, 18, 5, ['#fff7da', '#efdfb2']);
+      ovaloConVolumen(0, 11, 11, 6, '#f29a8c', '#b84a40');
+      ovalo(-1, 0, 1.5, 2.5, '#5e4a2a');  // semilla
       rectangulo(-1.5, -22, 3, 7, 1, '#7d6e3b');
       ovalo(5, -20, 6, 3, '#68ad69');
       break;
     case 'arroz':
       ovalo(0, 8, 20, 6, '#00000018');
-      for (let i = 0; i < 26; i++) ovalo(-14 + azar(i) * 28, -2 + azar(i * 3) * 11 - abs(azar(i) - 0.5) * 8, 2.6, 1.3, i % 4 ? '#fbf8ee' : '#e8dfc4');
+      for (let i = 0; i < 26; i++) ovalo(-14 + azar(i) * 28, -2 + azar(i * 3) * 11 - abs(azar(i) - 0.5) * 8, 2.6, 1.3, i % 4 ? '#fbf8ee' : '#e0d6b8');
       break;
     // ----- Caneca negra: no aprovechables (sucios, mojados o metalizados) -----
     case 'panuelo':
-      poligono([[-16, -8], [-6, -16], [8, -12], [17, -2], [12, 12], [-4, 15], [-15, 8]], '#f7f7f4', '#b9bdb8');
-      trazo([[-8, -6], [2, 0], [-2, 8]], '#d6d9d4', 2);
-      trazo([[6, -6], [10, 4]], '#d6d9d4', 2);
+      poligonoConVolumen([[-16, -8], [-6, -16], [8, -12], [17, -2], [12, 12], [-4, 15], [-15, 8]], ['#ffffff', '#ecece6', '#cfd2cc'], '#b9bdb8');
+      trazo([[-8, -6], [2, 0], [-2, 8]], '#cfd2cc', 2);
+      trazo([[6, -6], [10, 4]], '#cfd2cc', 2);
       break;
     case 'paquetePapas':
-      poligono([[-14, -20], [14, -20], [16, 18], [-16, 18]], '#f2c230', '#b38a12');
-      rectangulo(-16, -22, 32, 5, 1, '#c9ced3');  // bordes metalizados
-      rectangulo(-16, 16, 32, 5, 1, '#c9ced3');
-      ovalo(0, 1, 9, 7, '#e8a23a');
-      trazo([[-10, -12], [-4, -6]], '#ffffffaa', 3);  // brillo
+      poligonoConVolumen([[-14, -20], [14, -20], [16, 18], [-16, 18]], ['#fff3b0', '#f2c230', '#b38a12', '#f7d35c'], '#9a7410');
+      rectanguloConVolumen(-16, -23, 32, 5, 1, ['#f4f6f8', '#9aa3aa', '#e0e4e8']);  // bordes metalizados
+      rectanguloConVolumen(-16, 16, 32, 5, 1, ['#f4f6f8', '#9aa3aa', '#e0e4e8']);
+      ovaloConVolumen(0, 1, 9, 7, '#ffd27a', '#c9782a');
+      trazo([[-10, -14], [-5, -7]], '#ffffffcc', 3);  // brillo
+      trazo([[8, -16], [6, 12]], '#a8780f66', 1.5);    // arrugas
       break;
     case 'chocolatina':
-      poligono([[-20, -8], [-27, -13], [-27, 13], [-20, 8]], '#d4b13a');
-      poligono([[20, -8], [27, -13], [27, 13], [20, 8]], '#d4b13a');
-      rectangulo(-20, -8, 40, 16, 2, '#6b3e26', '#3f2416');
+      poligonoConVolumen([[-20, -8], [-27, -13], [-27, 13], [-20, 8]], ['#fff0a8', '#d4b13a', '#9a7a1a']);
+      poligonoConVolumen([[20, -8], [27, -13], [27, 13], [20, 8]], ['#fff0a8', '#d4b13a', '#9a7a1a']);
+      rectanguloConVolumen(-20, -8, 40, 16, 2, ['#9a6040', '#6b3e26', '#3f2416'], '#3f2416');
       trazo([[-12, -3], [8, -3]], '#f0d27a', 2);
       break;
     case 'servilletaGrasa':
-      poligono([[-21, -13], [-4, -18], [15, -13], [23, 10], [3, 17], [-18, 11]], '#f2eee4', '#b8ad97');
-      ovalo(-3, -1, 10, 6, '#c9a26a99');
-      ovalo(9, 7, 6, 4, '#b8894f88');
+      poligonoConVolumen([[-21, -13], [-4, -18], [15, -13], [23, 10], [3, 17], [-18, 11]], ['#ffffff', '#f2eee4', '#ddd6c6'], '#b8ad97');
+      ovalo(-3, -1, 10, 6, '#c9a26a88');
+      ovalo(9, 7, 6, 4, '#b8894f77');
+      ovalo(-12, 6, 4, 3, '#b8894f55');
       break;
     case 'cajaPizza':
-      rectangulo(-24, -14, 48, 30, 3, '#d3a46b', '#93683b');
-      ovalo(-9, 2, 9, 6, '#a8733699');
-      ovalo(10, -5, 7, 5, '#a8733688');
-      poligono([[4, 6], [19, 2], [14, 14]], '#f2c14e', '#c98a2a');  // pedazo de pizza
+      poligonoConVolumen([[-24, -10], [20, -10], [26, -4], [-18, -4]], ['#ebc18f', '#d3a46b'], null, pantalla, true);  // canto
+      rectanguloConVolumen(-26, -4, 52, 22, 3, ['#e0b07a', '#c9955a', '#a8743f'], '#8a5f30');
+      ovalo(-10, 6, 9, 5, '#8a5a2a77');   // grasa
+      ovalo(10, 2, 7, 4, '#8a5a2a66');
+      poligonoConVolumen([[2, 12], [20, 6], [16, 18]], ['#ffd977', '#f2a83e'], '#c98a2a');  // pedazo de pizza
+      ovalo(13, 11, 2, 2, '#d64545');
       break;
     case 'periodicoMojado':
-      rectangulo(-21, -15, 42, 30, 2, '#dcd8cc', '#7f7c70');
+      rectanguloConVolumen(-21, -15, 42, 30, 2, ['#e6e3d8', '#d2cec1', '#b9b5a8'], '#7f7c70');
       rectangulo(-17, -11, 34, 6, 1, '#59606b');
       for (const y of [-1, 4, 9]) trazo([[-17, y], [17, y]], '#9a978c', 2);
-      ovalo(-7, 3, 10, 7, '#7fb2d988');  // manchas de agua
-      ovalo(10, -3, 6, 5, '#7fb2d988');
-      trazo([[-7, 10], [-7, 18]], '#7fb2d9', 2);
+      ovaloConVolumen(-7, 3, 10, 7, '#9cc4e2aa', '#5f8fb588');  // manchas de agua
+      ovaloConVolumen(10, -3, 6, 5, '#9cc4e2aa', '#5f8fb588');
+      trazo([[-7, 10], [-7, 19]], '#7fb2d9', 2);
       break;
   }
+}
+
+// Botella plástica transparente con tapa, etiqueta y reflejo.
+function dibujarBotella(cuerpo, tapa, etiqueta) {
+  rectanguloConVolumen(-7, -26, 14, 8, 2, tapa);
+  poligonoConVolumen([[-6, -18], [6, -18], [11, -10], [11, 18], [-11, 18], [-11, -10]], cuerpo, '#4a9ab088');
+  rectangulo(-11, -2, 22, 10, 1, etiqueta);
+  trazo([[-6, -10], [-6, 14]], '#ffffffaa', 2.5);   // reflejo
+  trazo([[-11, 10], [11, 7]], '#4a9ab066', 1.5);    // arruga de botella aplastada
+}
+
+// Caja en 3D: cara del frente, costado (más oscuro) y tapa (más clara).
+function dibujarCaja(x, y, ancho, alto, fondo, frente, costado, arriba) {
+  poligono([[x, y], [x + fondo, y - fondo * 0.6], [x + ancho + fondo, y - fondo * 0.6], [x + ancho, y]], arriba);
+  poligono([[x + ancho, y], [x + ancho + fondo, y - fondo * 0.6], [x + ancho + fondo, y + alto - fondo * 0.6], [x + ancho, y + alto]], costado);
+  rectanguloConVolumen(x, y, ancho, alto, 1, frente, '#00000033');
 }
 
 // El personaje elegido. Usa los colores de su ropa (PERSONAJES) y, si tiene foto, su cara.
@@ -1240,7 +1453,8 @@ function dibujarJugador() {
   const tieneFoto = p.imagen && p.imagen.complete && p.imagen.naturalWidth > 0;
   push();
   translate(jugadorX, jugadorY);
-  ovalo(3, 4, 36, 12, '#09271873');  // sombra
+  scale(escalaPorProfundidad(jugadorY));  // más pequeño al fondo, más grande adelante
+  sombraSuave(2, 3, 42, 11, 0.55);
 
   push();
   scale(jugadorMiraA, 1);  // mira a la izquierda o a la derecha
@@ -1250,8 +1464,8 @@ function dibujarJugador() {
   ovalo(-13 + paso * 7, 2, 12, 5, p.zapatos, p.suela);
   ovalo(12 - paso * 7, 2, 12, 5, p.zapatos, p.suela);
   // Mochila de guardián
-  rectangulo(-31, -82 + r, 20, 50, 8, '#d9aa5e', '#705e40');
-  rectangulo(-27, -48 + r, 15, 19, 5, '#a77a49');
+  rectanguloConVolumen(-31, -82 + r, 20, 50, 8, ['#ebc27a', '#c9964a', '#8f6a3a'], '#705e40');
+  rectanguloConVolumen(-27, -48 + r, 15, 19, 5, ['#b8884f', '#8f6a3a']);
   // Brazos (se mueven al contrario de las piernas)
   const manoIzquierda = [-24 - paso * 5, -42 + r];
   const manoDerecha = [25 + paso * 5, -41 + r];
@@ -1264,7 +1478,7 @@ function dibujarJugador() {
     trazo([[14, -73 + r], [19 + paso * 2, -59 + r]], p.camisa, 15);
   }
   // Camisa o chaqueta
-  rectangulo(-19, -83 + r, 38, 61, 13, p.camisa, p.sombraCamisa);
+  rectanguloConVolumen(-19, -83 + r, 38, 61, 13, [p.camisa, p.camisa, p.sombraCamisa], p.sombraCamisa);
   dibujarDetallesRopa(p, r);
   // Cuello
   rectangulo(-7, -100 + r, 14, 22, 6, p.sombraPiel);
@@ -1680,6 +1894,190 @@ function ovaloDegradado(c, x, y, radioX, radioY, claro, oscuro) {
   c.beginPath();
   c.ellipse(x, y, radioX, radioY, 0, 0, Math.PI * 2);
   c.fill();
+}
+
+// ----- Ayudas para que el dibujo se vea más real -----
+
+// Perspectiva: las líneas del piso se juntan en un punto de fuga lejano, como en una foto.
+const PISO_Y = 250;                    // donde la pared toca el piso
+const FUGA = { x: 520, y: -380 };      // punto de fuga (fuera de la pantalla, arriba)
+
+// Dónde queda, a la altura y, una línea que en la pared empieza en xEnLaPared.
+function xEnPerspectiva(xEnLaPared, y) {
+  return FUGA.x + ((xEnLaPared - FUGA.x) * (y - FUGA.y)) / (PISO_Y - FUGA.y);
+}
+
+// Filas del piso: cada fila es un poco más alta que la anterior (más cerca = más grande).
+function filasDelPiso(altoInicial) {
+  const filas = [];
+  for (let y = PISO_Y, alto = altoInicial; y < ALTO; y += alto, alto *= 1.14) filas.push(y);
+  filas.push(ALTO);
+  return filas;
+}
+
+// Lo que está al fondo se ve más pequeño y lo que está adelante, más grande.
+function escalaPorProfundidad(y) {
+  return constrain(0.86 + ((y - LIMITES.arriba) / (LIMITES.abajo - LIMITES.arriba)) * 0.26, 0.86, 1.12);
+}
+
+function dibujarPisoDeBaldosas(g, ancho, colores, colorJunta, altoInicial = 30) {
+  const filas = filasDelPiso(altoInicial);
+  conContexto(g, c => {
+    for (let f = 0; f < filas.length - 1; f++) {
+      const y0 = filas[f];
+      const y1 = filas[f + 1];
+      for (let x = -900; x < ANCHO + 900; x += ancho) {
+        const k = Math.round((x + 900) / ancho);
+        c.fillStyle = colores[(f + k) % 2];
+        c.globalAlpha = 0.9 + azar(f * 31 + k) * 0.1;  // cada baldosa con un tono un poco distinto
+        c.beginPath();
+        c.moveTo(xEnPerspectiva(x, y0), y0);
+        c.lineTo(xEnPerspectiva(x + ancho, y0), y0);
+        c.lineTo(xEnPerspectiva(x + ancho, y1), y1);
+        c.lineTo(xEnPerspectiva(x, y1), y1);
+        c.closePath();
+        c.fill();
+      }
+    }
+    c.globalAlpha = 1;
+    c.strokeStyle = colorJunta;
+    c.lineWidth = 1.2;
+    for (const y of filas) {
+      c.beginPath();
+      c.moveTo(0, y);
+      c.lineTo(ANCHO, y);
+      c.stroke();
+    }
+    for (let x = -900; x < ANCHO + 900; x += ancho) {
+      c.beginPath();
+      c.moveTo(xEnPerspectiva(x, PISO_Y), PISO_Y);
+      c.lineTo(xEnPerspectiva(x, ALTO), ALTO);
+      c.stroke();
+    }
+  });
+}
+
+// Textura: puntitos claros y oscuros que imitan pintura, cemento o corcho.
+function textura(g, x, y, ancho, alto, cantidad, claro, oscuro, semilla = 1) {
+  g.noStroke();
+  for (let i = 0; i < cantidad; i++) {
+    g.fill(i % 2 ? claro : oscuro);
+    g.rect(x + azar(i * 1.37 + semilla) * ancho, y + azar(i * 2.71 + semilla) * alto,
+      1 + azar(i * 3.1 + semilla) * 2, 1 + azar(i * 4.3 + semilla) * 2);
+  }
+}
+
+// Manchas suaves (humedad, desgaste, mugre).
+function manchas(g, x, y, ancho, alto, cantidad, color, semilla = 1) {
+  for (let i = 0; i < cantidad; i++) {
+    ovalo(x + azar(i * 5.1 + semilla) * ancho, y + azar(i * 6.7 + semilla) * alto,
+      10 + azar(i * 7.3 + semilla) * 40, 5 + azar(i * 8.9 + semilla) * 18, color, null, g);
+  }
+}
+
+// Sombra difuminada en el piso (oscura en el centro y transparente en el borde).
+function sombraSuave(x, y, radioX, radioY, opacidad = 0.35, g = pantalla) {
+  conContexto(g, c => {
+    c.translate(x, y);
+    c.scale(1, radioY / radioX);
+    const d = c.createRadialGradient(0, 0, 0, 0, 0, radioX);
+    d.addColorStop(0, `rgba(25,22,15,${opacidad})`);
+    d.addColorStop(1, 'rgba(25,22,15,0)');
+    c.fillStyle = d;
+    c.beginPath();
+    c.arc(0, 0, radioX, 0, Math.PI * 2);
+    c.fill();
+  });
+}
+
+// Mancha de luz que entra por una ventana (más fuerte arriba, se desvanece abajo).
+function luzEnElPiso(g, puntos, opacidad) {
+  const ys = puntos.map(p => p[1]);
+  conContexto(g, c => {
+    c.fillStyle = degradadoLineal(c, 0, Math.min(...ys), 0, Math.max(...ys),
+      [`rgba(255,246,214,${opacidad})`, 'rgba(255,246,214,0)']);
+    trazarPoligono(c, puntos);
+    c.fill();
+  });
+}
+
+// Sombra donde la pared toca el piso.
+function sombraDeLaPared(g, opacidad = 0.28) {
+  conContexto(g, c => {
+    c.fillStyle = degradadoLineal(c, 0, PISO_Y, 0, PISO_Y + 45, [`rgba(60,45,25,${opacidad})`, 'rgba(60,45,25,0)']);
+    c.fillRect(0, PISO_Y, ANCHO, 45);
+  });
+}
+
+function trazarPoligono(c, puntos) {
+  c.beginPath();
+  puntos.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y)));
+  c.closePath();
+}
+
+function caminoRedondeado(c, x, y, ancho, alto, radio) {
+  const r = Math.min(radio, ancho / 2, alto / 2);
+  c.beginPath();
+  c.moveTo(x + r, y);
+  c.arcTo(x + ancho, y, x + ancho, y + alto, r);
+  c.arcTo(x + ancho, y + alto, x, y + alto, r);
+  c.arcTo(x, y + alto, x, y, r);
+  c.arcTo(x, y, x + ancho, y, r);
+  c.closePath();
+}
+
+// Rectángulo con volumen: degradado de la luz (izquierda) a la sombra (derecha).
+function rectanguloConVolumen(x, y, ancho, alto, radio, colores, borde = null, g = pantalla) {
+  conContexto(g, c => {
+    caminoRedondeado(c, x, y, ancho, alto, radio);
+    c.fillStyle = degradadoLineal(c, x, 0, x + ancho, 0, colores);
+    c.fill();
+    if (borde) {
+      c.strokeStyle = borde;
+      c.lineWidth = 1.5;
+      c.stroke();
+    }
+  });
+}
+
+// Polígono con volumen. Si vertical es true, la luz va de arriba hacia abajo.
+function poligonoConVolumen(puntos, colores, borde = null, g = pantalla, vertical = false) {
+  const xs = puntos.map(p => p[0]);
+  const ys = puntos.map(p => p[1]);
+  conContexto(g, c => {
+    trazarPoligono(c, puntos);
+    c.fillStyle = vertical
+      ? degradadoLineal(c, 0, Math.min(...ys), 0, Math.max(...ys), colores)
+      : degradadoLineal(c, Math.min(...xs), 0, Math.max(...xs), 0, colores);
+    c.fill();
+    if (borde) {
+      c.strokeStyle = borde;
+      c.lineWidth = 1.5;
+      c.stroke();
+    }
+  });
+}
+
+// Óvalo con brillo arriba a la izquierda (se ve redondo, como una esfera).
+function ovaloConVolumen(x, y, radioX, radioY, claro, oscuro, g = pantalla) {
+  conContexto(g, c => ovaloDegradado(c, x, y, radioX, radioY, claro, oscuro));
+}
+
+// Texto escrito con tiza: dos capas un poco corridas para que se vea gastado.
+function tiza(g, texto, x, y, tamano, color) {
+  escribir(texto, x + 0.8, y + 0.6, tamano, color + '55', CENTER, g);
+  escribir(texto, x, y, tamano, color + 'dd', CENTER, g);
+}
+
+// Viñeta: oscurece un poco los bordes de la pantalla, como en una cámara.
+function dibujarLuz() {
+  conContexto(pantalla, c => {
+    const v = c.createRadialGradient(ANCHO / 2, ALTO * 0.55, 260, ANCHO / 2, ALTO * 0.55, 720);
+    v.addColorStop(0, 'rgba(0,0,0,0)');
+    v.addColorStop(1, 'rgba(10,14,12,0.38)');
+    c.fillStyle = v;
+    c.fillRect(0, 0, ANCHO, ALTO);
+  });
 }
 
 // Solo lectura: permite revisar el estado del juego desde la consola del navegador (F12).
