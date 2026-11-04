@@ -65,16 +65,44 @@ Consideramos pasar a Three.js (3D), pero decidimos **mantener p5.js**: ya estaba
 | Texturas | Pintura de pared, cemento, corcho, polvo de tiza, ladrillo y tejado de barro, hechos con puntitos y manchas. | Sí |
 | Más detalle en los escenarios | Cartelera con avisos y bandera, pupitres, nevera con bebidas, ventanas con reja, gradería y montañas al fondo. | Sí |
 
-**Pendiente del equipo:** actualizar en la Entrega 1 (GDD) el problema, los escenarios, la historia y las canecas para que coincidan con el juego. También pueden tomar fotos del punto ecológico real del colegio para comparar.
+### Cambio de librería: de p5.js a Three.js (3D)
+
+Después de mejorar el dibujo 2D, el equipo quería que el colegio se viera todavía más real. Revisamos la guía (Misión 16, páginas 18 y 19): usar una librería es obligatorio, pero se puede elegir entre **Phaser, p5.js o Three.js**, siempre que la elección se justifique. Decidimos **cambiar a Three.js**.
+
+**Justificación (para la Misión 16 y el punto 17 del GDD):**
+> Elegimos **Three.js** porque queríamos que el colegio se viera real: un espacio en 3D con luces, sombras, materiales que reflejan la luz y una cámara con perspectiva. Con p5.js solo podíamos imitar el 3D dibujando. Three.js está en la lista de librerías de la guía ("experiencias 3D"), funciona en el navegador y en celulares, y tiene buena documentación. Lo guardamos en `libreria/three.min.js` para que el juego funcione sin internet.
+
+| Componente | Problema | Solución | ¿Funcionó? |
+|---|---|---|---|
+| Estructura | El código de dibujo y la lógica estaban mezclados en `game.js`. | `game.js` quedó solo con las reglas, la puntuación y los controles. `escena3d.js` arma y dibuja el mundo 3D. | Sí |
+| Mundo 3D | Había que pasar del mapa plano a un mundo con profundidad. | El mapa del juego (1040 × 585) se convierte a metros: 50 unidades = 1 metro (`aMundoX`, `aMundoZ`). | Sí |
+| Escenarios | El salón, la tienda y la cancha eran dibujos planos. | Se arman con cajas, cilindros y esferas de Three.js, con texturas pintadas en canvas: baldosa, cemento, tablero con tiza, cartelera, tejado, malla de la cancha… | Sí |
+| Luz y sombras | Las sombras eran manchas dibujadas a mano. | Una luz de sol (`DirectionalLight`) proyecta sombras reales y una luz de cielo (`HemisphereLight`) ilumina suave. Los materiales reaccionan a la luz (`MeshStandardMaterial`): la baldosa brilla y las latas parecen metal. | Sí |
+| Personajes | El cuerpo era un dibujo plano. | Cuerpo en 3D (cápsulas y cajas) con la ropa de cada uno. Camina moviendo brazos y piernas, gira hacia donde va y lleva el residuo en las manos. La cara de Cristian y Juan es su foto. | Sí |
+| Muebles sólidos | El personaje atravesaba el escritorio y los pupitres. | `chocaConMuebles()` no lo deja pasar por encima de los muebles. | Sí |
+| Tocar la pantalla | Con perspectiva, un toque ya no corresponde a un punto del mapa en línea recta. | Un `Raycaster` lanza un rayo desde la cámara por el punto tocado y averigua si tocó una caneca, un residuo o el piso. | Sí |
+| Cámara | Al principio la cámara seguía al jugador y la basura de las esquinas quedaba fuera de la pantalla. | La cámara quedó fija y abierta para que siempre se vea todo el escenario. | Sí |
+| Fotos de las caras | WebGL no acepta imágenes cargadas desde archivos al abrir `index.html` con doble clic. | Las caras se guardaron como texto (data URI) en `assets/personajes/caras.js`. | Sí |
+| Computadores lentos | En equipos sin tarjeta de video el 3D puede ir lento. | Calidad automática: si el juego va a menos de 30 cuadros por segundo, baja la resolución; si va sobrado, la sube. | Sí |
+| Nombres | El texto dentro del 3D se ve borroso en celular. | Los nombres de residuos y canecas son etiquetas HTML que siguen a cada objeto en la pantalla. | Sí |
+
+Se probó en Chrome y Edge de computador, en Safari de iPhone 14 (emulado) y en Chrome de Android (emulado): los tres niveles, la celebración y los resultados, sin errores.
+
+**Pendiente del equipo:**
+- Actualizar en la Entrega 1 (GDD) el problema, los escenarios, la historia y las canecas para que coincidan con el juego.
+- Cambiar el punto 17 del GDD y la Misión 16 a **Three.js**, con la justificación de arriba.
+- Contarle al profe el cambio de librería.
 
 ## Bitácora de IA
 
 | Fecha | Necesidad | Prompt (resumen) | Respuesta utilizada | Decisión del equipo |
 |---|---|---|---|---|
 | 4-nov-2026 | El profesor dijo que el juego era genérico | Le dimos a la IA la guía del proyecto y le pedimos ajustar el juego | Cuatro enfoques posibles para que el juego fuera propio | Elegimos "nuestro colegio" y revisamos que los residuos y las canecas siguieran la norma colombiana |
+| 4-nov-2026 | Queríamos que el juego se viera más real | Preguntamos si era obligatorio seguir con p5.js y pedimos cambiar la librería | La guía permite Phaser, p5.js o Three.js si se justifica. La IA rehízo el dibujo en 3D con Three.js | Elegimos Three.js para que el colegio se viera en 3D con luces y sombras. Mantuvimos las mismas reglas y niveles |
 
 ## Cómo revisar el juego
 
-- Abre `index.html` en Chrome, Edge o Firefox. No necesita internet.
-- En la consola del navegador (F12) escribe `GuardianesDelPlaneta.estado()` para ver los puntos, el tiempo, el nivel y la posición de Eco.
-- Para cambiar la dificultad, edita las constantes al inicio de `game.js`: `TIEMPO_TOTAL`, `META_PUNTOS`, `VELOCIDAD_ECO` o la lista `NIVELES`.
+- Abre `index.html` en Chrome, Edge, Firefox o Safari. No necesita internet.
+- En la consola del navegador (F12) escribe `GuardianesDelPlaneta.estado()` para ver los puntos, el tiempo, el nivel y la posición del personaje.
+- Para cambiar la dificultad, edita las constantes al inicio de `game.js`: `TIEMPO_TOTAL`, `META_PUNTOS`, `VELOCIDAD_JUGADOR` o la lista `NIVELES`.
+- Para mover la cámara o cambiar las luces, edita `iniciarEscena3D()` y `configurarLuz()` en `escena3d.js`.

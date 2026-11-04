@@ -44,7 +44,7 @@
           </div>
         </div>
 
-        <!-- Escenario: p5.js inserta aquí el lienzo (canvas) del juego -->
+        <!-- Escenario: escena3d.js (Three.js) inserta aquí el lienzo 3D del juego -->
         <div class="escenario" id="contenedorJuego">
           <noscript><p class="sin-js">Activa JavaScript para jugar.</p></noscript>
           <div class="aviso" id="aviso" role="status" aria-live="polite"></div>
@@ -209,8 +209,10 @@
     <footer>🌿 Aprende, juega y transforma tu entorno. · Hecho por Cristian López y Juan Noriega.</footer>
   </div>
 
-  <!-- p5.js va guardado en la carpeta libreria/ para que el juego funcione sin internet -->
-  <script src="libreria/p5.min.js"></script>
+  <!-- Three.js va guardado en la carpeta libreria/ para que el juego funcione sin internet -->
+  <script src="libreria/three.min.js"></script>
+  <script src="assets/personajes/caras.js"></script>
+  <script src="escena3d.js"></script>
   <script src="game.js"></script>
 </body>
 </html>

@@ -75,11 +75,21 @@ h1 span { color: var(--verde-claro); }
 .boton-icono:hover:not(:disabled) { background: #31765f; }
 .boton-icono:disabled { opacity: .4; cursor: not-allowed; }
 
-/* ----- Escenario (lienzo de p5.js) ----- */
-.escenario { position: relative; overflow: hidden; background: #70a38f; }
-/* p5.js le pone al canvas un tamaño fijo; aquí lo hacemos adaptable. */
-.escenario canvas { display: block; width: 100% !important; height: auto !important; touch-action: none; }
+/* ----- Escenario (lienzo 3D de Three.js) ----- */
+.escenario { position: relative; overflow: hidden; background: #3a352c; }
+.escenario canvas { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; touch-action: none; }
 .sin-js { margin: 0; padding: 40px; text-align: center; font-weight: 900; }
+
+/* Nombres de residuos y canecas, y el globo de ayuda: texto HTML que sigue a los objetos 3D */
+.etiquetas-3d { position: absolute; inset: 0; z-index: 2; overflow: hidden; pointer-events: none; }
+.etiquetas-3d > div { position: absolute; top: 0; left: 0; display: none; white-space: nowrap; font-weight: 900; }
+.etiqueta-3d { padding: 3px 9px; border-radius: 9px; background: #fffef0e6; box-shadow: 0 2px 8px #0003; color: #295d45; font-size: 11px; }
+.nombre-caneca { padding: 3px 12px; border-radius: 8px; background: #fbfff3f2; box-shadow: 0 2px 8px #0003; color: #275443; font-size: 11px; letter-spacing: .5px; }
+.burbuja-3d { padding: 5px 12px; border-radius: 12px; background: #1d654cee; box-shadow: 0 4px 12px #0004; color: #ffffff; font-size: 12px; }
+@media (max-width: 600px) {
+  .etiqueta-3d, .nombre-caneca { padding: 2px 6px; font-size: 9px; }
+  .burbuja-3d { padding: 3px 8px; font-size: 10px; }
+}
 
 .aviso { position: absolute; top: 16px; left: 50%; z-index: 3; max-width: min(62%, 640px); padding: 10px 20px; border: 1px solid #b7e5c94d; border-radius: 100px; background: #124f3df0; box-shadow: 0 10px 30px #082724b0; color: #fff; font-size: 13px; font-weight: 900; text-align: center; opacity: 0; pointer-events: none; transform: translate(-50%, -10px); transition: opacity .2s, transform .2s; }
 .aviso.visible { opacity: 1; transform: translate(-50%, 0); }
